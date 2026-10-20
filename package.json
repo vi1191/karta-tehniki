@@ -1,0 +1,23 @@
+{
+  "name": "karta-tehniki",
+  "version": "1.0.0",
+  "description": "Карта техники — Жилищник (Тропарёво-Никулино)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}
