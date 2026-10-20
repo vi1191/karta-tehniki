@@ -1,11 +1,11 @@
 // src/ui.js
 import { MACHINES, SUBTYPE_ORDER } from './data.js';
-import { esc, escAttr, isYardObject } from './utils.js';
+import { esc, escAttr } from './utils.js';
 import { 
   currentCategory, activeUchastok, selectedForShow, 
   routeFilterActive, explicitlyExpanded, subtypesCollapsedByDefault,
-  collapsedSubtypes, editMode, activeVehicle, hoveredVehicle,
-  getBaseColor, getUchastokColor, getYardColor, getRouteColor
+  collapsedSubtypes, activeVehicle, hoveredVehicle,
+  getBaseColor
 } from './state.js';
 
 // === ВЫЗОВ СТАРЫХ ФУНКЦИЙ ИЗ index.html ===
