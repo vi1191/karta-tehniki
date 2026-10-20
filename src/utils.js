@@ -134,3 +134,15 @@ export function offsetPolyline(coords, offset) {
   }
   return result;
 }
+export function inferAreaFromName(name) {
+  if (!name) return null;
+  const m = String(name).match(/дворы\s+участок\s*(\d+)/i);
+  if (m && m[1]) return m[1] + 'уч';
+  const m2 = String(name).match(/участок\s*(\d+)/i);
+  if (m2 && m2[1]) return m2[1] + 'уч';
+  return null;
+}
+
+export function isYardObject(s) {
+  return !!(s && (s.isYard || s.polygon));
+}

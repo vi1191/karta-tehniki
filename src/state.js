@@ -164,3 +164,4 @@ export function restoreSnapshot(snap) {
     });
   } finally { undoInProgress = false; }
 }
+export function setCurrentCategory(v) { currentCategory = v; }
