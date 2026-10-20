@@ -787,6 +787,8 @@ window.toast = toast; window.toggleSidebar = toggleSidebar; window.toggleExpandS
   import { initMap as newInitMap } from './src/map.js';
 import { VID_TO_GROUP, MACHINES_RAW, SUBTYPE_MAP, SUBTYPE_ORDER, DVORY_PLATES, ODH_PLATES, AREA_MAP, MACHINES, YARD_BOUNDARIES, STREETS } from './src/data.js';
 import { esc, escAttr, safeJsonForScript, hslToHex, lineLength, polygonArea, closeRing, lighten, offsetPolyline, inferAreaFromName, isYardObject } from './src/utils.js';
+import { renderList as newRenderList, setCategory as newSetCategory } from './src/ui.js';
+import { openMiniRoute, closeMiniRoute } from './src/routes.js';
 
 /* ============================================================ СОСТОЯНИЕ ============================================================ */
 let currentCategory = 'dvory';
@@ -1626,30 +1628,9 @@ function highlightVehicleOnMap(plate) {
 }
 
 /* ============================================================ MINI ROUTE ============================================================ */
-function openMiniRoute(plate) {
-  const m = MACHINES.find(x => x.plate === plate);
-  if (!m) { toast('Машина не найдена: ' + plate, 'error'); return; }
-  miniRouteVehicle = plate;
-  activeVehicle = plate;
-  ensureRoutes(plate);
-  updateActiveCard();
-  closePicker();
-  closeEditor();
-  renderRouteTabs();
-  renderMiniRoute();
-  document.getElementById('mini-route').classList.add('open');
-  redrawAllRoutes();
-  zoomToActiveRoute();
-  highlightVehicleOnMap(plate);
-}
 
-function closeMiniRoute() {
-  miniRouteVehicle = null;
-  document.getElementById('mini-route').classList.remove('open');
-  closePicker();
-  redrawAllRoutes();
-  highlightVehicleOnMap(null);
-}
+
+
 
 function renderRouteTabs() {
   const container = document.getElementById('route-tabs');
@@ -3610,4 +3591,6 @@ window.toast = toast; window.toggleSidebar = toggleSidebar; window.toggleExpandS
 </script>
 </body>
 </html>
+
+
 
