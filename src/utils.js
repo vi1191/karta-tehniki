@@ -135,4 +135,5 @@ export function offsetPolyline(coords, offset) {
     result.push([coords[i][0] + nx, coords[i][1] + ny / cosLat]);
   }
 
+  return result;
 }
