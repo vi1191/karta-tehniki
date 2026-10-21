@@ -1,3 +1,4 @@
+import { onMapClick } from './editor.js';
 import { 
   setMap, 
   setRouteLayerGroup,
@@ -11,6 +12,7 @@ export function initMap() {
   const bounds = L.latLngBounds([55.620,37.425],[55.705,37.555]);
   const newMap = L.map('map', {zoomControl:true, maxBounds:bounds, maxBoundsViscosity:0.7, minZoom:12, maxZoom:19}).setView([55.655,37.485], 14);
   setMap(newMap);
+  newMap.on('click', onMapClick);
 
   const baseLayers = {
     'Схема': L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {subdomains:'abc', attribution:'&copy; OpenStreetMap France', maxZoom:20}),

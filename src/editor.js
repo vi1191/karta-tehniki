@@ -1,20 +1,16 @@
 // src/editor.js
+import { STREETS } from './data.js'; 
 
-// === Состояние редактора (внутри модуля) ===
 export let drawingMode = false;
 export let editObjectMode = false;
 export let connectMode = false;
 export let editingStreetIdx = -1;
-export const STREETS = []; // Пустой массив, будем заполнять позже
 
-// Вспомогательная функция для тостов
 function showToast(msg) {
   console.log('Toast:', msg);
-  // Если в index.html есть старая функция toast, используем её
   if (typeof window.toast === 'function') window.toast(msg, 'info');
 }
 
-// === Переключение режима рисования ===
 export function toggleDrawingMode() {
   drawingMode = !drawingMode;
   if (drawingMode) {
@@ -31,7 +27,6 @@ export function toggleDrawingMode() {
   }
 }
 
-// === Обновление кнопок панели ===
 export function updateToolbarButtons() {
   const tbPoints = document.getElementById('tb-points');
   const tbConnect = document.getElementById('tb-connect');
@@ -48,24 +43,35 @@ export function updateToolbarButtons() {
   }
 }
 
-// === Добавление линии ===
-export function addExtraLine() {
-  if (editingStreetIdx < 0) {
-    showToast('Сначала выберите объект');
-    return;
+// === Обработчик клика по карте ===
+export function onMapClick(e) {
+  if (editingStreetIdx < 0 || !drawingMode) return;
+
+  const s = STREETS[editingStreetIdx];
+  if (!s) return;
+
+  const pt = [e.latlng.lat, e.latlng.lng];
+  
+  if (s._drawingGroupIdx && s._drawingGroupIdx > 0) {
+    const epIdx = s._drawingGroupIdx - 1;
+    if (!s.extraPolygons[epIdx]) s.extraPolygons[epIdx] = [];
+    s.extraPolygons[epIdx].push(pt);
+  } else {
+    if (!s.coords) s.coords = [];
+    s.coords.push(pt);
   }
-  // Пока заглушка, чтобы не упасть
-  console.log('addExtraLine: нужно восстановить STREETS');
+  
+  console.log('Точка добавлена:', pt);
+  showToast('Точка добавлена');
 }
 
-// === Остальные заглушки (пока) ===
+export function addExtraLine() { showToast('Логика добавления линии пока не перенесена'); }
 export function toggleConnectMode() { console.log('toggleConnectMode'); }
 export function handleConnectClick(gi, idx) { console.log('handleConnectClick', gi, idx); }
 export function insertPointRelative(gi, idx, direction) { console.log('insertPointRelative'); }
 export function deleteExtraLine(epIdx) { console.log('deleteExtraLine'); }
 export function clearThisLineGeometry(gi) { console.log('clearThisLineGeometry'); }
 
-// === toggleEditor (восстановленный) ===
 export function toggleEditor() {
   const panel = document.getElementById('editor-panel');
   if (panel) {
