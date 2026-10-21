@@ -4,7 +4,7 @@ import { esc, escAttr } from './utils.js';
 import { 
   currentCategory, activeUchastok, selectedForShow, 
   routeFilterActive, explicitlyExpanded, subtypesCollapsedByDefault,
-  collapsedSubtypes, activeVehicle, hoveredVehicle,
+  collapsedSubtypes, activeVehicle, hoveredVehicle, setHoveredVehicle,
   getBaseColor
 } from './state.js';
 
@@ -152,13 +152,13 @@ function createMachineCard(m) {
 
   card.addEventListener('mouseenter', () => {
     if (hasRoutes) {
-      hoveredVehicle = m.plate;
+      setHoveredVehicle(m.plate);
       highlightVehicleOnMap(m.plate);
     }
   });
   card.addEventListener('mouseleave', () => {
     if (hoveredVehicle === m.plate) {
-      hoveredVehicle = null;
+      setHoveredVehicle(null);
       highlightVehicleOnMap(null);
     }
   });

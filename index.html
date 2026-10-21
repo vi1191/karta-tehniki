@@ -780,7 +780,12 @@ Object.assign(window, {
   scmCreateNew: todo('scmCreateNew'), scmRemoveSubtype: todo('scmRemoveSubtype')
 });
 
-window.addEventListener('DOMContentLoaded', () => { initMap(); setCategory('dvory'); renderList(); updateCategoryCounts(); });
+function boot() { initMap(); setCategory('dvory'); renderList(); updateCategoryCounts(); }
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
 </script>
 </body>
 </html>

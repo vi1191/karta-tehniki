@@ -1,4 +1,4 @@
-import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory, routeFilterActive, setRouteFilterActive } from './state.js';
+import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory, routeFilterActive, setRouteFilterActive, STORAGE_KEY, rbRoutesByVehicle, activeRouteIndex } from './state.js';
 import { MACHINES } from './data.js';
 import { renderList } from './ui.js';
 export function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
@@ -27,10 +27,42 @@ export function startOnboarding() { console.log('startOnboarding: logic not move
 export function exportHTML() { console.log('exportHTML: logic not moved yet'); }
 export function printRoutes() { console.log('printRoutes: logic not moved yet'); }
 export function undoLastAction() { console.log('undoLastAction: logic not moved yet'); }
-export function saveData(silent = false) { console.log('saveData: logic not moved yet', silent); }
-// === ильтры и участки ===
-export function toggleExpandSidebar() { 
-  document.getElementById('sidebar').classList.toggle('expanded'); 
+function setSaveStatus(state) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  if (state === 'saved') { el.textContent = '💾 Сохранено'; el.classList.remove('saving'); }
+  else if (state === 'saving') { el.textContent = '⏳ Сохранение...'; el.classList.add('saving'); }
+}
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.className = 'toast ' + (type || 'info');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+export function saveData(showIndicator) {
+  const overrides = {};
+  MACHINES.forEach(m => { overrides[m.plate] = { isODH: m.isODH, isDvory: m.isDvory, area: m.area, subtype: m.subtype }; });
+  const data = {
+    version: 45,
+    rbRoutesByVehicle,
+    streets: STREETS,
+    categoryOverrides: overrides,
+    selectedForShow: Array.from(selectedForShow),
+    activeRouteIndex,
+    ts: Date.now()
+  };
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    setSaveStatus('saved');
+    if (showIndicator) toast('Сохранено', 'success');
+  } catch (e) {
+    const msg = e.name === 'QuotaExceededError' ? 'Хранилище переполнено. кспортируйте в HTML.' : ('шибка сохранения: ' + e.message);
+    toast(msg, 'error');
+  }
 }
 export function toggleRouteFilter() {
   setRouteFilterActive(!routeFilterActive);
@@ -68,4 +100,7 @@ export function toggleSelectAll() {
     setSelectedForShow(new Set(cat.map(m => m.plate)));
   }
   renderList();
+}
+export function toggleExpandSidebar() {
+  document.getElementById('sidebar')?.classList.toggle('expanded');
 }

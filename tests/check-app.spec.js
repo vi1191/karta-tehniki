@@ -11,7 +11,14 @@ test.describe('Проверка всего приложения', () => {
   });
 
   test('1. Карта загружается', async ({ page }) => {
+        // early-listeners
+    await page.addInitScript(() => {
+      window.__errs = [];
+      window.addEventListener('error', e => window.__errs.push('ERR: ' + e.message));
+      window.addEventListener('unhandledrejection', e => window.__errs.push('REJ: ' + (e.reason?.message || e.reason)));
+    });
     await page.goto(APP_URL);
+    console.log('EARLY ERRS:', await page.evaluate(() => window.__errs));
     await page.waitForLoadState('domcontentloaded');
     page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
     page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
@@ -22,7 +29,14 @@ test.describe('Проверка всего приложения', () => {
   });
 
   test('2. Карточки техники есть', async ({ page }) => {
+        // early-listeners
+    await page.addInitScript(() => {
+      window.__errs = [];
+      window.addEventListener('error', e => window.__errs.push('ERR: ' + e.message));
+      window.addEventListener('unhandledrejection', e => window.__errs.push('REJ: ' + (e.reason?.message || e.reason)));
+    });
     await page.goto(APP_URL);
+    console.log('EARLY ERRS:', await page.evaluate(() => window.__errs));
     await page.waitForLoadState('domcontentloaded');
     page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
     page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
@@ -40,7 +54,14 @@ test.describe('Проверка всего приложения', () => {
   });
 
   test('3. Категории переключаются', async ({ page }) => {
+        // early-listeners
+    await page.addInitScript(() => {
+      window.__errs = [];
+      window.addEventListener('error', e => window.__errs.push('ERR: ' + e.message));
+      window.addEventListener('unhandledrejection', e => window.__errs.push('REJ: ' + (e.reason?.message || e.reason)));
+    });
     await page.goto(APP_URL);
+    console.log('EARLY ERRS:', await page.evaluate(() => window.__errs));
     await page.waitForLoadState('domcontentloaded');
     page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
     page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
@@ -61,7 +82,14 @@ test.describe('Проверка всего приложения', () => {
   });
 
   test('4. Поиск работает', async ({ page }) => {
+        // early-listeners
+    await page.addInitScript(() => {
+      window.__errs = [];
+      window.addEventListener('error', e => window.__errs.push('ERR: ' + e.message));
+      window.addEventListener('unhandledrejection', e => window.__errs.push('REJ: ' + (e.reason?.message || e.reason)));
+    });
     await page.goto(APP_URL);
+    console.log('EARLY ERRS:', await page.evaluate(() => window.__errs));
     await page.waitForLoadState('domcontentloaded');
     page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
     page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
@@ -73,7 +101,14 @@ test.describe('Проверка всего приложения', () => {
   });
 
   test('5. Кнопка редактора есть', async ({ page }) => {
+        // early-listeners
+    await page.addInitScript(() => {
+      window.__errs = [];
+      window.addEventListener('error', e => window.__errs.push('ERR: ' + e.message));
+      window.addEventListener('unhandledrejection', e => window.__errs.push('REJ: ' + (e.reason?.message || e.reason)));
+    });
     await page.goto(APP_URL);
+    console.log('EARLY ERRS:', await page.evaluate(() => window.__errs));
     await page.waitForLoadState('domcontentloaded');
     page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
     page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
@@ -87,7 +122,14 @@ test.describe('Проверка всего приложения', () => {
   });
 
   test('6. Маршруты открываются', async ({ page }) => {
+        // early-listeners
+    await page.addInitScript(() => {
+      window.__errs = [];
+      window.addEventListener('error', e => window.__errs.push('ERR: ' + e.message));
+      window.addEventListener('unhandledrejection', e => window.__errs.push('REJ: ' + (e.reason?.message || e.reason)));
+    });
     await page.goto(APP_URL);
+    console.log('EARLY ERRS:', await page.evaluate(() => window.__errs));
     await page.waitForLoadState('domcontentloaded');
     page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
     page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
@@ -110,7 +152,14 @@ test.describe('Проверка всего приложения', () => {
     page.on('console', msg => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
+        // early-listeners
+    await page.addInitScript(() => {
+      window.__errs = [];
+      window.addEventListener('error', e => window.__errs.push('ERR: ' + e.message));
+      window.addEventListener('unhandledrejection', e => window.__errs.push('REJ: ' + (e.reason?.message || e.reason)));
+    });
     await page.goto(APP_URL);
+    console.log('EARLY ERRS:', await page.evaluate(() => window.__errs));
     await page.waitForLoadState('domcontentloaded');
     page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
     page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
