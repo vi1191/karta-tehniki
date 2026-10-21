@@ -757,7 +757,7 @@ import { MACHINES } from './src/data.js';
 import { initMap } from './src/map.js';
 import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
 import { toggleEditor } from './src/editor.js';
-import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData } from './src/ui-controls.js';
+import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok } from './src/ui-controls.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
 // Выставляем функции в window для onclick
@@ -777,7 +777,7 @@ import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switch
 
 // ыставление простых функций (заглушки для кнопок)
 
-window.toggleExpandSidebar = () => { document.getElementById('sidebar').classList.toggle('expanded'); };
+
 window.toggleLegend = () => { document.getElementById('legend').classList.toggle('open'); };
 
 
@@ -805,6 +805,10 @@ window.exportHTML = exportHTML;
 window.printRoutes = printRoutes;
 window.undoLastAction = undoLastAction;
 window.saveData = saveData;
+window.toggleExpandSidebar = toggleExpandSidebar;
+window.toggleRouteFilter = toggleRouteFilter;
+window.toggleOverlaps = toggleOverlaps;
+window.selectUchastok = selectUchastok;
 window.setShowMode = (mode) => { console.log('setShowMode:', mode); };
 window.openMiniRoute = openMiniRoute;
 window.closeMiniRoute = closeMiniRoute;

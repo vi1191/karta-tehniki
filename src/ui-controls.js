@@ -25,3 +25,16 @@ export function exportHTML() { console.log('exportHTML: logic not moved yet'); }
 export function printRoutes() { console.log('printRoutes: logic not moved yet'); }
 export function undoLastAction() { console.log('undoLastAction: logic not moved yet'); }
 export function saveData(silent = false) { console.log('saveData: logic not moved yet', silent); }
+// === ильтры и участки ===
+export function toggleExpandSidebar() { 
+  document.getElementById('sidebar').classList.toggle('expanded'); 
+}
+export function toggleRouteFilter() { 
+  console.log('toggleRouteFilter: logic not moved yet'); 
+}
+export function toggleOverlaps() { 
+  console.log('toggleOverlaps: logic not moved yet'); 
+}
+export function selectUchastok(num) { 
+  console.log('selectUchastok: logic not moved yet', num); 
+}
