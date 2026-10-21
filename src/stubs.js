@@ -1,4 +1,4 @@
-﻿export function manualOpenUchastok() { console.log('manualOpenUchastok'); }
+export function manualOpenUchastok() { console.log('manualOpenUchastok'); }
 export function openAddToCategory() { console.log('openAddToCategory'); }
 export function removeFromCategory() { console.log('removeFromCategory'); }
 export function toggleSelectAll() { console.log('toggleSelectAll'); }
@@ -9,8 +9,8 @@ export function printMapOnly() { console.log('printMapOnly'); }
 export function closePicker() { console.log('closePicker'); }
 export function addNewStreet() { console.log('addNewStreet'); }
 export function saveEditedStreet() { console.log('saveEditedStreet'); }
-export function clearEditorDraw() { console.log('clearEditorDraw'); }
-export function cancelEditing() { console.log('cancelEditing'); }
+
+
 export function closeHistory() { console.log('closeHistory'); }
 export function closeModal() { console.log('closeModal'); }
 export function closeNewStreetModal() { console.log('closeNewStreetModal'); }

@@ -187,3 +187,22 @@ export function toggleEditor() {
     console.log('editor-panel не найден');
   }
 }
+export function clearEditorDraw() {
+  if (editingStreetIdx < 0 || !STREETS[editingStreetIdx]) return;
+  if (!confirm('чистить все нарисованные линии и точки?')) return;
+  const s = STREETS[editingStreetIdx];
+  s.coords = [];
+  s.extraPolygons = [];
+  showToast('еометрия очищена');
+  renderEditorStreets();
+}
+
+export function cancelEditing() {
+  editingStreetIdx = -1;
+  drawingMode = false;
+  updateToolbarButtons();
+  renderEditorStreets();
+  const info = document.getElementById('ed-info');
+  if (info) info.textContent = 'ликните по объекту на карте или в списке, чтобы начать редактирование.';
+  console.log('едактирование отменено');
+}
