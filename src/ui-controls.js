@@ -1,4 +1,4 @@
-import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory, routeFilterActive, setRouteFilterActive, STORAGE_KEY, rbRoutesByVehicle, activeRouteIndex } from './state.js';
+import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory, routeFilterActive, setRouteFilterActive, STORAGE_KEY, rbRoutesByVehicle, setRbRoutesByVehicle, activeRouteIndex, setActiveRouteIndex } from './state.js';
 import { MACHINES } from './data.js';
 import { renderList } from './ui.js';
 
@@ -104,5 +104,38 @@ export function saveData(showIndicator) {
     if (showIndicator) toast('Сохранено', 'success');
   } catch (e) {
     toast('Ошибка сохранения: ' + e.message, 'error');
+  }
+}
+
+export function loadData() {
+  let raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('zhilischnik_v44') || localStorage.getItem('zhilischnik_v43'); } catch (e) { return; }
+  if (!raw) return;
+  let data;
+  try { data = JSON.parse(raw); } catch (e) { console.warn('loadData: битый JSON', e); return; }
+
+  if (data.rbRoutesByVehicle && typeof data.rbRoutesByVehicle === 'object') {
+    const fresh = {};
+    Object.keys(data.rbRoutesByVehicle).forEach(plate => {
+      const old = data.rbRoutesByVehicle[plate];
+      if (!Array.isArray(old)) return;
+      const routes = [];
+      for (let i = 0; i < 5; i++) {
+        const r = old[i];
+        routes.push(r ? { items: r.items || [], color: r.color || null, name: r.name || ('М' + (i + 1)), ts: r.ts || null } : { items: [], color: null, name: 'М' + (i + 1), ts: null });
+      }
+      fresh[plate] = routes;
+    });
+    setRbRoutesByVehicle(fresh);
+  }
+
+  if (Array.isArray(data.selectedForShow)) setSelectedForShow(new Set(data.selectedForShow));
+  if (typeof data.activeRouteIndex === 'number') setActiveRouteIndex(data.activeRouteIndex);
+
+  if (data.categoryOverrides && typeof data.categoryOverrides === 'object') {
+    MACHINES.forEach(m => {
+      const o = data.categoryOverrides[m.plate];
+      if (o) { m.isODH = !!o.isODH; m.isDvory = !!o.isDvory; m.area = o.area || ''; m.subtype = o.subtype || ''; }
+    });
   }
 }

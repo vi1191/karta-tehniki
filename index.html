@@ -756,13 +756,13 @@
 import { initMap } from './src/map.js';
 import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
 import { toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine } from './src/editor.js';
-import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll } from './src/ui-controls.js';
+import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll, loadData } from './src/ui-controls.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
 Object.assign(window, {
   setCategory, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine,
   onSearchInput, renderList, updateCategoryCounts,
-  toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll,
+  toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll, loadData,
   openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom
 });
 
@@ -780,7 +780,7 @@ Object.assign(window, {
   scmCreateNew: todo('scmCreateNew'), scmRemoveSubtype: todo('scmRemoveSubtype')
 });
 
-function boot() { initMap(); setCategory('dvory'); renderList(); updateCategoryCounts(); }
+function boot() { initMap(); loadData(); setCategory('dvory'); renderList(); updateCategoryCounts(); }
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', boot);
 } else {
