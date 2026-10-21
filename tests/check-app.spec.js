@@ -79,7 +79,10 @@ test.describe('Проверка всего приложения', () => {
     page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
     page.on('pageerror', e => console.log('PAGE EXCEPTION:', e.message));
     await page.waitForSelector('#edit-mode-btn', { timeout: 15000 });
-    await expect(page.locator('#edit-mode-btn')).toBeVisible();
+    await page.locator('#edit-mode-btn').click();
+    await page.waitForTimeout(500);
+    const btnText = await page.locator('#edit-mode-btn').innerText();
+    expect(btnText).toContain('Готово');
     console.log('✅ Кнопка редактора есть');
   });
 
