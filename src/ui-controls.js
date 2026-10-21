@@ -1,4 +1,4 @@
-import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory } from './state.js';
+import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory, routeFilterActive, setRouteFilterActive } from './state.js';
 import { MACHINES } from './data.js';
 import { renderList } from './ui.js';
 export function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
@@ -32,8 +32,9 @@ export function saveData(silent = false) { console.log('saveData: logic not move
 export function toggleExpandSidebar() { 
   document.getElementById('sidebar').classList.toggle('expanded'); 
 }
-export function toggleRouteFilter() { 
-  console.log('toggleRouteFilter: logic not moved yet'); 
+export function toggleRouteFilter() {
+  setRouteFilterActive(!routeFilterActive);
+  renderList();
 }
 export function toggleOverlaps() { 
   console.log('toggleOverlaps: logic not moved yet'); 
