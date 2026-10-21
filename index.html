@@ -756,13 +756,13 @@
 import { initMap } from './src/map.js';
 import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
 import { toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine } from './src/editor.js';
-import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode } from './src/ui-controls.js';
+import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll } from './src/ui-controls.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
 Object.assign(window, {
   setCategory, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine,
   onSearchInput, renderList, updateCategoryCounts,
-  toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode,
+  toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll,
   openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom
 });
 
@@ -775,7 +775,7 @@ window.skipOnboarding      = () => { localStorage.setItem('zhilischnik_onboarded
 const todo = (n) => () => console.warn('[TODO] ' + n);
 Object.assign(window, {
   manualOpenUchastok: todo('manualOpenUchastok'), openAddToCategory: todo('openAddToCategory'), removeFromCategory: todo('removeFromCategory'),
-  toggleSelectAll: todo('toggleSelectAll'), openPicker: todo('openPicker'), printRoute: todo('printRoute'), printMapOnly: todo('printMapOnly'),
+  openPicker: todo('openPicker'), printRoute: todo('printRoute'), printMapOnly: todo('printMapOnly'),
   addNewStreet: todo('addNewStreet'), confirmNewStreet: todo('confirmNewStreet'), onboardingNext: todo('onboardingNext'),
   scmCreateNew: todo('scmCreateNew'), scmRemoveSubtype: todo('scmRemoveSubtype')
 });

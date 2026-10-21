@@ -1,4 +1,5 @@
-import { activeUchastok, setActiveUchastok } from './state.js';
+import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory } from './state.js';
+import { MACHINES } from './data.js';
 import { renderList } from './ui.js';
 export function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 export function toggleDropdown(id) { document.getElementById(id).classList.toggle('open'); }
@@ -51,4 +52,19 @@ export function toggleLegend() {
 }
 export function setShowMode(mode) {
   console.log('setShowMode:', mode);
+}
+
+export function toggleSelectAll() {
+  const cat = MACHINES.filter(m =>
+    currentCategory === 'odh' ? m.isODH :
+    currentCategory === 'dvory' ? m.isDvory :
+    true
+  );
+  const allSelected = cat.length > 0 && cat.every(m => selectedForShow.has(m.plate));
+  if (allSelected) {
+    setSelectedForShow(new Set());
+  } else {
+    setSelectedForShow(new Set(cat.map(m => m.plate)));
+  }
+  renderList();
 }
