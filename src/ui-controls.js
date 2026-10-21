@@ -38,3 +38,10 @@ export function toggleOverlaps() {
 export function selectUchastok(num) { 
   console.log('selectUchastok: logic not moved yet', num); 
 }
+// === егенда и режимы показа ===
+export function toggleLegend() {
+  document.getElementById('legend').classList.toggle('open');
+}
+export function setShowMode(mode) {
+  console.log('setShowMode:', mode);
+}
