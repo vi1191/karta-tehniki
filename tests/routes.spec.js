@@ -1,6 +1,6 @@
 ﻿import { test, expect } from '@playwright/test';
 
-const APP_URL = 'http://localhost:5173/index.html';
+const APP_URL = 'http://localhost:5174/index.html';
 
 test.describe('Маршруты — проверка', () => {
 

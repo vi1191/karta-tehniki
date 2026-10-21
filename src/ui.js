@@ -186,3 +186,4 @@ export function setCategory(cat) {
   import('./state.js').then(m => m.setCurrentCategory(cat));
   renderList();
 }
+export function onSearchInput() { renderList(); }

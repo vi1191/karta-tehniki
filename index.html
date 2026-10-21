@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
@@ -755,7 +755,8 @@
 <script type="module">
 import { MACHINES } from './src/data.js';
 import { initMap } from './src/map.js';
-import { renderList, setCategory, updateCategoryCounts } from './src/ui.js';
+import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
+import { toggleEditor } from './src/editor.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
 // Выставляем функции в window для onclick
@@ -779,7 +780,6 @@ window.toggleExpandSidebar = () => { document.getElementById('sidebar').classLis
 window.toggleLegend = () => { document.getElementById('legend').classList.toggle('open'); };
 window.toggleDropdown = (id) => { document.getElementById(id).classList.toggle('open'); };
 window.toggleTheme = () => { document.body.classList.toggle('dark'); };
-window.toggleEditor = () => { console.log('toggleEditor (нужно перенести)'); };
 window.toggleEditMode = () => { console.log('toggleEditMode (нужно перенести)'); };
 window.openHistory = () => { console.log('openHistory (нужно перенести)'); };
 window.exportCSV = () => { console.log('exportCSV (нужно перенести)'); };
@@ -790,6 +790,8 @@ window.undoLastAction = () => { console.log('undoLastAction (нужно пере
 window.startOnboarding = () => { console.log('startOnboarding (нужно перенести)'); };
 window.saveData = () => { console.log('saveData (нужно перенести)'); };
 window.setCategory = setCategory;
+window.toggleEditor = toggleEditor;
+window.onSearchInput = onSearchInput;
 window.setShowMode = (mode) => { console.log('setShowMode:', mode); };
 window.openMiniRoute = openMiniRoute;
 window.closeMiniRoute = closeMiniRoute;
@@ -812,6 +814,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 

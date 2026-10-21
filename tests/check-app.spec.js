@@ -1,4 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 const APP_URL = 'http://localhost:5173/index.html';
 
@@ -12,7 +12,10 @@ test.describe('Проверка всего приложения', () => {
 
   test('1. Карта загружается', async ({ page }) => {
     await page.goto(APP_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
+    page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
+    page.on('pageerror', e => console.log('PAGE EXCEPTION:', e.message));
     await page.waitForSelector('.leaflet-container', { timeout: 15000 });
     await expect(page.locator('.leaflet-container')).toBeVisible();
     console.log('✅ Карта загружена');
@@ -20,7 +23,10 @@ test.describe('Проверка всего приложения', () => {
 
   test('2. Карточки техники есть', async ({ page }) => {
     await page.goto(APP_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
+    page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
+    page.on('pageerror', e => console.log('PAGE EXCEPTION:', e.message));
     const headers = page.locator('.subtype-header');
     const count = await headers.count();
     for (let i = 0; i < count; i++) {
@@ -35,7 +41,10 @@ test.describe('Проверка всего приложения', () => {
 
   test('3. Категории переключаются', async ({ page }) => {
     await page.goto(APP_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
+    page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
+    page.on('pageerror', e => console.log('PAGE EXCEPTION:', e.message));
     await page.waitForSelector('.cat-tab', { timeout: 15000 });
 
     await page.locator('.cat-tab[data-cat="odh"]').click();
@@ -53,7 +62,10 @@ test.describe('Проверка всего приложения', () => {
 
   test('4. Поиск работает', async ({ page }) => {
     await page.goto(APP_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
+    page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
+    page.on('pageerror', e => console.log('PAGE EXCEPTION:', e.message));
     await page.waitForSelector('#search', { timeout: 15000 });
     await page.locator('#search').fill('7922');
     await page.waitForTimeout(500);
@@ -62,7 +74,10 @@ test.describe('Проверка всего приложения', () => {
 
   test('5. Кнопка редактора есть', async ({ page }) => {
     await page.goto(APP_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
+    page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
+    page.on('pageerror', e => console.log('PAGE EXCEPTION:', e.message));
     await page.waitForSelector('#edit-mode-btn', { timeout: 15000 });
     await expect(page.locator('#edit-mode-btn')).toBeVisible();
     console.log('✅ Кнопка редактора есть');
@@ -70,7 +85,10 @@ test.describe('Проверка всего приложения', () => {
 
   test('6. Маршруты открываются', async ({ page }) => {
     await page.goto(APP_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
+    page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
+    page.on('pageerror', e => console.log('PAGE EXCEPTION:', e.message));
     const headers = page.locator('.subtype-header');
     const count = await headers.count();
     for (let i = 0; i < count; i++) {
@@ -90,7 +108,10 @@ test.describe('Проверка всего приложения', () => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
     await page.goto(APP_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    page.on('response', r => { if (r.status() >= 400) console.log('404 URL:', r.url(), r.status()); });
+    page.on('console', m => { if (m.type() === 'error') console.log('PAGE ERROR:', m.text()); });
+    page.on('pageerror', e => console.log('PAGE EXCEPTION:', e.message));
     await page.waitForTimeout(2000);
     if (errors.length > 0) {
       console.log('⚠️ Ошибки в консоли:', errors);
