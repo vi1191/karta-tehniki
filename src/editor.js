@@ -12,6 +12,12 @@ function showToast(msg) {
   if (typeof window.toast === 'function') window.toast(msg, 'info');
 }
 
+function isYardObject(s) {
+  if (!s) return false;
+  if (s.type === 'yard') return true;
+  return s.coords && s.coords.length >= 3;
+}
+
 export function toggleDrawingMode() {
   drawingMode = !drawingMode;
   if (drawingMode) {
@@ -44,7 +50,6 @@ export function updateToolbarButtons() {
   }
 }
 
-// === Обработчик клика по карте ===
 export function onMapClick(e) {
   if (editingStreetIdx < 0 || !drawingMode) return;
 
@@ -55,6 +60,7 @@ export function onMapClick(e) {
   
   if (s._drawingGroupIdx && s._drawingGroupIdx > 0) {
     const epIdx = s._drawingGroupIdx - 1;
+    if (!s.extraPolygons) s.extraPolygons = [];
     if (!s.extraPolygons[epIdx]) s.extraPolygons[epIdx] = [];
     s.extraPolygons[epIdx].push(pt);
   } else {
@@ -64,20 +70,13 @@ export function onMapClick(e) {
   
   console.log('Точка добавлена:', pt);
   showToast('Точка добавлена');
-}
-
-// === Отрисовка списка улиц в редакторе ===
-function isYardObject(s) {
-  if (!s) return false;
-  if (s.type === 'yard') return true;
-  return s.coords && s.coords.length >= 3;
+  renderEditorStreets(); // Обновляем список, чтобы увидеть изменение количества точек
 }
 
 export function renderEditorStreets() {
   const searchInput = document.getElementById('ed-street-search');
   const search = searchInput ? searchInput.value.toLowerCase() : '';
   
-  // Ищем контейнер. В старом коде это был ed-street-list
   const container = document.getElementById('ed-street-list') || document.getElementById('editor-streets-list');
   
   if (!container) {
@@ -109,17 +108,63 @@ export function renderEditorStreets() {
       </span>
     `;
 
-    // Добавляем обработчик клика для выбора улицы
     item.addEventListener('click', () => {
       editingStreetIdx = idx;
-      renderEditorStreets(); // Перерисовать, чтобы подсветить выбранную
+      renderEditorStreets();
       const info = document.getElementById('ed-info');
       if (info) info.textContent = 'Редактируется: ' + s.name;
+      
+      // Заполняем инпуты в панели редактора
+      const nameInput = document.getElementById('ed-street-name');
+      const areaInput = document.getElementById('ed-street-area');
+      if (nameInput) nameInput.value = s.name;
+      if (areaInput) areaInput.value = s.area || '';
+      
       console.log('Выбрана улица:', s.name, 'Индекс:', idx);
     });
 
     container.appendChild(item);
   });
+}
+
+export function saveEditedStreet() {
+  if (editingStreetIdx < 0 || !STREETS[editingStreetIdx]) {
+    showToast('Объект не выбран');
+    return;
+  }
+  const s = STREETS[editingStreetIdx];
+  const nameInput = document.getElementById('ed-street-name');
+  const areaInput = document.getElementById('ed-street-area');
+  
+  if (!nameInput) return;
+  const name = nameInput.value.trim();
+  if (!name) {
+    showToast('Введите название');
+    return;
+  }
+  
+  const isPoly = isYardObject(s);
+  if (isPoly && (!s.coords || s.coords.length < 3)) {
+    showToast('Минимум 3 точки для полигона');
+    return;
+  }
+  if (!isPoly && (!s.coords || s.coords.length < 2)) {
+    showToast('Минимум 2 точки для линии');
+    return;
+  }
+
+  s.name = name;
+  if (areaInput) s.area = areaInput.value;
+
+  try {
+    const dataToSave = { streets: STREETS };
+    localStorage.setItem('zhilischnik_v45_streets', JSON.stringify(dataToSave));
+    showToast('Объект сохранён!');
+    renderEditorStreets();
+  } catch (e) {
+    console.error('Ошибка сохранения:', e);
+    showToast('Ошибка сохранения');
+  }
 }
 
 export function addExtraLine() { showToast('Логика добавления линии пока не перенесена'); }
@@ -136,7 +181,7 @@ export function toggleEditor() {
     const isOpen = panel.classList.contains('open');
     if (isOpen) {
       updateToolbarButtons();
-      renderEditorStreets(); // Вызываем отрисовку при открытии
+      renderEditorStreets();
     }
   } else {
     console.log('editor-panel не найден');
