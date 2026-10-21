@@ -1,4 +1,4 @@
-import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory, routeFilterActive, setRouteFilterActive, STORAGE_KEY, rbRoutesByVehicle, setRbRoutesByVehicle, activeRouteIndex, setActiveRouteIndex } from './state.js';
+import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory, routeFilterActive, setRouteFilterActive, STORAGE_KEY, rbRoutesByVehicle, setRbRoutesByVehicle, activeRouteIndex, setActiveRouteIndex, history, setHistory } from './state.js';
 import { MACHINES } from './data.js';
 import { renderList } from './ui.js';
 
@@ -20,7 +20,22 @@ export function toggleEditMode() {
   btn.innerHTML = isEdit ? '💾 <span>Готово</span>' : '✏️ <span>Редактировать</span>';
 }
 
-export function openHistory() { console.log('openHistory: logic not moved yet'); }
+export function openHistory() {
+  const panel = document.getElementById('history-panel');
+  const body = document.getElementById('history-body');
+  if (!panel || !body) return;
+  if (!history || history.length === 0) {
+    body.innerHTML = '<div class="hp-empty">История пуста</div>';
+  } else {
+    body.innerHTML = history.slice().reverse().map(h => {
+      const time = h.time ? new Date(h.time).toLocaleString('ru-RU') : '';
+      const label = h.label || 'изменение';
+      return '<div class="hp-item"><div class="hp-time">' + time + '</div>' + label + '</div>';
+    }).join('');
+  }
+  panel.classList.add('open');
+}
+
 export function exportCSV() { console.log('exportCSV: logic not moved yet'); }
 export function startOnboarding() { console.log('startOnboarding: logic not moved yet'); }
 export function exportHTML() { console.log('exportHTML: logic not moved yet'); }
