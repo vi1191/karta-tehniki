@@ -757,7 +757,7 @@ import { MACHINES } from './src/data.js';
 import { initMap } from './src/map.js';
 import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
 import { toggleEditor } from './src/editor.js';
-import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding } from './src/ui-controls.js';
+import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData } from './src/ui-controls.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
 // Выставляем функции в window для onclick
@@ -784,12 +784,12 @@ window.toggleLegend = () => { document.getElementById('legend').classList.toggle
 
 
 
-window.exportHTML = () => { console.log('exportHTML (нужно перенести)'); };
-window.printRoutes = () => { console.log('printRoutes (нужно перенести)'); };
 
-window.undoLastAction = () => { console.log('undoLastAction (нужно перенести)'); };
 
-window.saveData = () => { console.log('saveData (нужно перенести)'); };
+
+
+
+
 window.setCategory = setCategory;
 window.toggleEditor = toggleEditor;
 window.onSearchInput = onSearchInput;
@@ -801,6 +801,10 @@ window.toggleEditMode = toggleEditMode;
 window.openHistory = openHistory;
 window.exportCSV = exportCSV;
 window.startOnboarding = startOnboarding;
+window.exportHTML = exportHTML;
+window.printRoutes = printRoutes;
+window.undoLastAction = undoLastAction;
+window.saveData = saveData;
 window.setShowMode = (mode) => { console.log('setShowMode:', mode); };
 window.openMiniRoute = openMiniRoute;
 window.closeMiniRoute = closeMiniRoute;
