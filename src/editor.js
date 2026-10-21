@@ -1,16 +1,80 @@
 // src/editor.js
 
-// Заглушки для функций редактора (пока не перенесены)
-export function toggleDrawingMode() { if (typeof window.toggleDrawingMode === 'function') window.toggleDrawingMode(); }
-export function toggleEditObjectMode(on) { if (typeof window.toggleEditObjectMode === 'function') window.toggleEditObjectMode(on); }
-export function addExtraLine() { if (typeof window.addExtraLine === 'function') window.addExtraLine(); }
-export function toggleConnectMode() { if (typeof window.toggleConnectMode === 'function') window.toggleConnectMode(); }
-export function handleConnectClick(gi, idx) { if (typeof window.handleConnectClick === 'function') window.handleConnectClick(gi, idx); }
-export function insertPointRelative(gi, idx, direction) { if (typeof window.insertPointRelative === 'function') window.insertPointRelative(gi, idx, direction); }
-export function deleteExtraLine(epIdx) { if (typeof window.deleteExtraLine === 'function') window.deleteExtraLine(epIdx); }
-export function clearThisLineGeometry(gi) { if (typeof window.clearThisLineGeometry === 'function') window.clearThisLineGeometry(gi); }
+// === Состояние редактора (внутри модуля) ===
+export let drawingMode = false;
+export let editObjectMode = false;
+export let connectMode = false;
+export let editingStreetIdx = -1;
+export const STREETS = []; // Пустой массив, будем заполнять позже
 
-// Реальная toggleEditor (пока вызывает старую из index.html)
+// Вспомогательная функция для тостов
+function showToast(msg) {
+  console.log('Toast:', msg);
+  // Если в index.html есть старая функция toast, используем её
+  if (typeof window.toast === 'function') window.toast(msg, 'info');
+}
+
+// === Переключение режима рисования ===
+export function toggleDrawingMode() {
+  drawingMode = !drawingMode;
+  if (drawingMode) {
+    editObjectMode = false;
+    connectMode = false;
+  }
+  updateToolbarButtons();
+  
+  const info = document.getElementById('ed-info');
+  if (info) {
+    info.textContent = drawingMode
+      ? '✏️ Режим рисования. Кликайте по карте для добавления точек.'
+      : 'Редактирование выключено';
+  }
+}
+
+// === Обновление кнопок панели ===
+export function updateToolbarButtons() {
+  const tbPoints = document.getElementById('tb-points');
+  const tbConnect = document.getElementById('tb-connect');
+  
+  if (tbPoints) {
+    tbPoints.classList.toggle('active', drawingMode || editObjectMode);
+    if (drawingMode) tbPoints.textContent = '✅ Рисование';
+    else if (editObjectMode) tbPoints.textContent = '✅ Добавление';
+    else tbPoints.textContent = '✏️ Точки';
+  }
+  if (tbConnect) {
+    tbConnect.classList.toggle('active', connectMode);
+    tbConnect.textContent = connectMode ? '🔗 Соединить...' : '🔗 Соединить';
+  }
+}
+
+// === Добавление линии ===
+export function addExtraLine() {
+  if (editingStreetIdx < 0) {
+    showToast('Сначала выберите объект');
+    return;
+  }
+  // Пока заглушка, чтобы не упасть
+  console.log('addExtraLine: нужно восстановить STREETS');
+}
+
+// === Остальные заглушки (пока) ===
+export function toggleConnectMode() { console.log('toggleConnectMode'); }
+export function handleConnectClick(gi, idx) { console.log('handleConnectClick', gi, idx); }
+export function insertPointRelative(gi, idx, direction) { console.log('insertPointRelative'); }
+export function deleteExtraLine(epIdx) { console.log('deleteExtraLine'); }
+export function clearThisLineGeometry(gi) { console.log('clearThisLineGeometry'); }
+
+// === toggleEditor (восстановленный) ===
 export function toggleEditor() {
-  console.log('toggleEditor: logic not moved yet');
+  const panel = document.getElementById('editor-panel');
+  if (panel) {
+    panel.classList.toggle('open');
+    const isOpen = panel.classList.contains('open');
+    if (isOpen) {
+      updateToolbarButtons();
+    }
+  } else {
+    console.log('editor-panel не найден');
+  }
 }

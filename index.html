@@ -756,7 +756,7 @@
 import { MACHINES } from './src/data.js';
 import { initMap } from './src/map.js';
 import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
-import { toggleEditor } from './src/editor.js';
+import { toggleEditor, toggleDrawingMode, updateToolbarButtons } from './src/editor.js';
 import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode } from './src/ui-controls.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
@@ -792,6 +792,7 @@ import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switch
 
 window.setCategory = setCategory;
 window.toggleEditor = toggleEditor;
+window.toggleDrawingMode = toggleDrawingMode;
 window.onSearchInput = onSearchInput;
 window.toggleSidebar = toggleSidebar;
 window.toggleDropdown = toggleDropdown;
