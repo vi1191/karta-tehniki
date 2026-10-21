@@ -753,89 +753,34 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
-import { MACHINES } from './src/data.js';
 import { initMap } from './src/map.js';
 import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
-import { toggleEditor, toggleDrawingMode, updateToolbarButtons, renderEditorStreets, saveEditedStreet, clearEditorDraw, cancelEditing } from './src/editor.js';
+import { toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine } from './src/editor.js';
 import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode } from './src/ui-controls.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
-// Выставляем функции в window для onclick
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ыставление простых функций (заглушки для кнопок)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-window.setCategory = setCategory;
-window.toggleEditor = toggleEditor;
-window.toggleDrawingMode = toggleDrawingMode;
-window.renderEditorStreets = renderEditorStreets;
-window.saveEditedStreet = saveEditedStreet;
-window.clearEditorDraw = clearEditorDraw;
-window.cancelEditing = cancelEditing;
-window.onSearchInput = onSearchInput;
-window.toggleSidebar = toggleSidebar;
-window.toggleDropdown = toggleDropdown;
-window.toggleTheme = toggleTheme;
-window.resetAll = resetAll;
-window.toggleEditMode = toggleEditMode;
-window.openHistory = openHistory;
-window.exportCSV = exportCSV;
-window.startOnboarding = startOnboarding;
-window.exportHTML = exportHTML;
-window.printRoutes = printRoutes;
-window.undoLastAction = undoLastAction;
-window.saveData = saveData;
-window.toggleExpandSidebar = toggleExpandSidebar;
-window.toggleRouteFilter = toggleRouteFilter;
-window.toggleOverlaps = toggleOverlaps;
-window.selectUchastok = selectUchastok;
-window.toggleLegend = toggleLegend;
-window.setShowMode = setShowMode;
-
-
-window.openMiniRoute = openMiniRoute;
-window.closeMiniRoute = closeMiniRoute;
-window.renderRouteTabs = renderRouteTabs;
-window.renderMiniRoute = renderMiniRoute;
-window.switchRoute = switchRoute;
-window.moveTab = moveTab;
-window.moveRoutePoint = moveRoutePoint;
-window.removeFromMiniRoute = removeFromMiniRoute;
-window.clearActiveRoute = clearActiveRoute;
-window.copyRouteFrom = copyRouteFrom;
-
-// Запуск
-window.addEventListener('DOMContentLoaded', () => {
-  initMap();
-  setCategory('dvory');
-  renderList();
-  updateCategoryCounts();
+Object.assign(window, {
+  setCategory, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine,
+  onSearchInput, renderList, updateCategoryCounts,
+  toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode,
+  openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom
 });
+
+window.closeHistory        = () => document.getElementById('history-panel')?.classList.remove('open');
+window.closePicker         = () => document.getElementById('picker')?.classList.remove('open');
+window.closeModal          = () => document.getElementById('modal-overlay')?.classList.remove('open');
+window.closeNewStreetModal = () => { const el = document.getElementById('new-street-modal'); if (el) el.style.display = 'none'; };
+window.skipOnboarding      = () => { localStorage.setItem('zhilischnik_onboarded','1'); const el = document.getElementById('onboarding-overlay'); if (el) el.style.display = 'none'; };
+
+const todo = (n) => () => console.warn('[TODO] ' + n);
+Object.assign(window, {
+  manualOpenUchastok: todo('manualOpenUchastok'), openAddToCategory: todo('openAddToCategory'), removeFromCategory: todo('removeFromCategory'),
+  toggleSelectAll: todo('toggleSelectAll'), openPicker: todo('openPicker'), printRoute: todo('printRoute'), printMapOnly: todo('printMapOnly'),
+  addNewStreet: todo('addNewStreet'), confirmNewStreet: todo('confirmNewStreet'), onboardingNext: todo('onboardingNext'),
+  scmCreateNew: todo('scmCreateNew'), scmRemoveSubtype: todo('scmRemoveSubtype')
+});
+
+window.addEventListener('DOMContentLoaded', () => { initMap(); setCategory('dvory'); renderList(); updateCategoryCounts(); });
 </script>
 </body>
 </html>

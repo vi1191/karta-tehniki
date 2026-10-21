@@ -1,11 +1,8 @@
 // src/editor.js
-import { STREETS } from './data.js'; 
+import { STREETS } from './data.js';
+import { drawingMode, editObjectMode, connectMode, editingStreetIdx, setDrawingMode, setEditObjectMode, setConnectMode, setEditingStreetIdx } from './state.js'; 
 import { esc } from './utils.js'; 
 
-export let drawingMode = false;
-export let editObjectMode = false;
-export let connectMode = false;
-export let editingStreetIdx = -1;
 
 function showToast(msg) {
   console.log('Toast:', msg);
@@ -19,10 +16,10 @@ function isYardObject(s) {
 }
 
 export function toggleDrawingMode() {
-  drawingMode = !drawingMode;
+  setDrawingMode(!drawingMode);
   if (drawingMode) {
-    editObjectMode = false;
-    connectMode = false;
+    setEditObjectMode(false);
+    setConnectMode(false);
   }
   updateToolbarButtons();
   
@@ -109,7 +106,7 @@ export function renderEditorStreets() {
     `;
 
     item.addEventListener('click', () => {
-      editingStreetIdx = idx;
+      setEditingStreetIdx(idx);
       renderEditorStreets();
       const info = document.getElementById('ed-info');
       if (info) info.textContent = 'Редактируется: ' + s.name;
@@ -198,8 +195,8 @@ export function clearEditorDraw() {
 }
 
 export function cancelEditing() {
-  editingStreetIdx = -1;
-  drawingMode = false;
+  setEditingStreetIdx(-1);
+  setDrawingMode(false);
   updateToolbarButtons();
   renderEditorStreets();
   const info = document.getElementById('ed-info');

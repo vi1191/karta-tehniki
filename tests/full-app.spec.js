@@ -47,11 +47,13 @@ test.describe('Полная проверка функционала', () => {
     }
     
     const before = await page.locator('.machine-card').count();
-    await page.locator('.uch-btn[data-u="1"]').click(); // Участок 1
-    await page.waitForTimeout(500);
+    await page.locator('.uch-btn[data-u="1"]').click();
+    await page.waitForTimeout(300);
     const after = await page.locator('.machine-card').count();
-    
-    expect(after).toBeLessThanOrEqual(before);
+    expect(after).toBeLessThan(before);
+    await page.locator('.uch-btn[data-u="1"]').click();
+    await page.waitForTimeout(300);
+    expect(await page.locator('.machine-card').count()).toBe(before);
     console.log(`✅ Участок 1 выбран, карточек: ${after}`);
   });
 

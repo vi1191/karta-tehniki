@@ -1,3 +1,5 @@
+import { activeUchastok, setActiveUchastok } from './state.js';
+import { renderList } from './ui.js';
 export function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 export function toggleDropdown(id) { document.getElementById(id).classList.toggle('open'); }
 export function toggleTheme() { document.body.classList.toggle('dark'); }
@@ -35,8 +37,13 @@ export function toggleRouteFilter() {
 export function toggleOverlaps() { 
   console.log('toggleOverlaps: logic not moved yet'); 
 }
-export function selectUchastok(num) { 
-  console.log('selectUchastok: logic not moved yet', num); 
+export function selectUchastok(num) {
+  const next = (activeUchastok === num) ? null : num;
+  setActiveUchastok(next);
+  document.querySelectorAll('.uch-btn').forEach(btn => {
+    btn.classList.toggle('active', String(btn.dataset.u) === String(next));
+  });
+  renderList();
 }
 // === егенда и режимы показа ===
 export function toggleLegend() {
