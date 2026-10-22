@@ -51,9 +51,64 @@ export function exportCSV() {
   toast('CSV экспортирован', 'success');
 }
 
-export function startOnboarding() { console.log('startOnboarding: logic not moved yet'); }
+export function exportHTML() {
+  const overrides = {};
+  MACHINES.forEach(m => { overrides[m.plate] = { isODH: m.isODH, isDvory: m.isDvory, area: m.area, subtype: m.subtype }; });
+  const embeddedData = {
+    version: 45, exported: new Date().toISOString(),
+    rbRoutesByVehicle, selectedForShow: Array.from(selectedForShow),
+    activeRouteIndex, history: history || [], activeUchastok,
+    categoryOverrides: overrides, ts: Date.now()
+  };
 
-export function exportHTML() { console.log('exportHTML: logic not moved yet'); }
+  const clone = document.documentElement.cloneNode(true);
+  // Чистим динамические элементы
+  const dynamicSelectors = [
+    '.photo-overlay', '#uchastok-panel', '#toast', '.leaflet-popup',
+    '.leaflet-control-container', '#line-context-menu', '#point-context-menu',
+    '#overlap-summary', '#editor-panel', '#history-panel', '#mini-route', '#picker',
+    '#modal-overlay', '#new-street-modal', '#onboarding-overlay',
+    '#sidebar-toggle', '#legend', '#subtype-context-menu', '#save-status'
+  ];
+  dynamicSelectors.forEach(sel => clone.querySelectorAll(sel).forEach(el => el.remove()));
+
+  const mapEl = clone.querySelector('#map');
+  if (mapEl) {
+    const fresh = document.createElement('div');
+    fresh.id = 'map';
+    mapEl.parentNode.replaceChild(fresh, mapEl);
+  }
+
+  clone.querySelectorAll('[class*="leaflet"]').forEach(el => {
+    el.className = el.className.split(' ').filter(c => c && !c.startsWith('leaflet')).join(' ');
+  });
+  clone.querySelectorAll('[id^="_leaflet"]').forEach(el => el.removeAttribute('id'));
+  clone.querySelectorAll('.open').forEach(el => el.classList.remove('open'));
+  clone.querySelectorAll('script#embedded-data').forEach(el => el.remove());
+  clone.querySelectorAll('[style*="position: absolute"][style*="z-index"]').forEach(el => {
+    if (el.id !== 'app' && el.id !== 'sidebar') el.removeAttribute('style');
+  });
+
+  let html = '<!DOCTYPE html>\n' + clone.outerHTML;
+  const dataJson = JSON.stringify(embeddedData).replace(/</g, '\\u003c');
+  const dataScript =
+    '\n<!-- ==== ВСТРОЕННЫЕ ДАННЫЕ (экспорт ' + new Date().toLocaleString('ru-RU') + ') ==== -->\n' +
+    '<script id="embedded-data" type="application/json">' + dataJson + '</scr' + 'ipt>\n' +
+    '<script>(function(){var el=document.getElementById("embedded-data");if(!el)return;try{window.__EMBEDDED_DATA__=JSON.parse(el.textContent);}catch(e){console.warn("Ошибка разбора:",e);}})();</scr' + 'ipt>\n';
+
+  html = html.replace('</body>', dataScript + '</body>');
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'karta_tehniki_' + new Date().toISOString().slice(0, 10) + '.html';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+  toast('HTML-файл сохранён', 'success');
+}
+
+export function startOnboarding() { console.log('startOnboarding: logic not moved yet'); }
 
 export function printRoutes() { console.log('printRoutes: logic not moved yet'); }
 
@@ -102,7 +157,6 @@ export function setShowMode(mode) {
   document.querySelectorAll('.show-mode-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById(`show-mode-${mode}`);
   if (btn) btn.classList.add('active');
-  // Заглушка, логика переключения режимов будет позже
 }
 
 export function toggleSelectAll() {
@@ -136,15 +190,26 @@ export function saveData(showIndicator = false) {
 export function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (data.rbRoutesByVehicle) setRbRoutesByVehicle(data.rbRoutesByVehicle);
-    if (data.selectedForShow) setSelectedForShow(new Set(data.selectedForShow));
-    if (typeof data.activeRouteIndex === 'number') setActiveRouteIndex(data.activeRouteIndex);
-    if (data.history) history = data.history;
-    if (data.activeUchastok) setActiveUchastok(data.activeUchastok);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data.rbRoutesByVehicle) setRbRoutesByVehicle(data.rbRoutesByVehicle);
+      if (data.selectedForShow) setSelectedForShow(new Set(data.selectedForShow));
+      if (typeof data.activeRouteIndex === 'number') setActiveRouteIndex(data.activeRouteIndex);
+      if (data.history) history = data.history;
+      if (data.activeUchastok) setActiveUchastok(data.activeUchastok);
+      return;
+    }
+    // Если localStorage пуст, проверяем встроенные данные из экспортированного HTML
+    if (window.__EMBEDDED_DATA__) {
+      const d = window.__EMBEDDED_DATA__;
+      if (d.rbRoutesByVehicle) setRbRoutesByVehicle(d.rbRoutesByVehicle);
+      if (d.selectedForShow) setSelectedForShow(new Set(d.selectedForShow));
+      if (typeof d.activeRouteIndex === 'number') setActiveRouteIndex(d.activeRouteIndex);
+      if (d.history) history = d.history;
+      if (d.activeUchastok) setActiveUchastok(d.activeUchastok);
+    }
   } catch (e) {
-    console.warn('loadData error:', e);
+    console.warn("loadData error:", e);
   }
 }
 
