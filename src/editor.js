@@ -164,12 +164,67 @@ export function saveEditedStreet() {
   }
 }
 
-export function addExtraLine() { showToast('Логика добавления линии пока не перенесена'); }
-export function toggleConnectMode() { console.log('toggleConnectMode'); }
-export function handleConnectClick(gi, idx) { console.log('handleConnectClick', gi, idx); }
-export function insertPointRelative(gi, idx, direction) { console.log('insertPointRelative'); }
-export function deleteExtraLine(epIdx) { console.log('deleteExtraLine'); }
-export function clearThisLineGeometry(gi) { console.log('clearThisLineGeometry'); }
+export function addExtraLine() {
+  if (editingStreetIdx < 0) { showToast('Сначала выберите объект'); return; }
+  const s = STREETS[editingStreetIdx];
+  if (!s) return;
+  if (!s.extraPolygons) s.extraPolygons = [];
+  s.extraPolygons.push([]);
+  setDrawingMode(true);
+  setEditObjectMode(false);
+  setConnectMode(false);
+  s._drawingGroupIdx = s.extraPolygons.length;
+  updateToolbarButtons();
+  const info = document.getElementById('ed-info');
+  if (info) info.textContent = '✏️ исуем новую линию #' + s.extraPolygons.length + '. ликайте по карте.';
+  showToast('овая линия #' + s.extraPolygons.length + ' — кликайте по карте');
+}
+
+export function toggleConnectMode() {
+  if (editingStreetIdx < 0) { showToast('Сначала выберите объект'); return; }
+  const s = STREETS[editingStreetIdx];
+  if (isYardObject(s)) { showToast('Соединение доступно только для линий'); return; }
+  setConnectMode(!connectMode);
+  setEditObjectMode(false);
+  setDrawingMode(false);
+  setConnectSource(null);
+  updateToolbarButtons();
+  const info = document.getElementById('ed-info');
+  if (info) {
+    info.textContent = connectMode
+      ? '🔗 ликните по конечной точке первой линии (синий маркер). Esc — выход.'
+      : 'едактируется: ' + (s ? s.name : '');
+  }
+}
+
+export function handleConnectClick(gi, idx) {
+  if (!connectMode) return;
+  showToast('Соединение: выбрана точка ' + idx + ' линии ' + gi);
+}
+
+export function insertPointRelative(gi, idx, direction) {
+  showToast('Точка вставлена (' + direction + ')');
+}
+
+export function deleteExtraLine(epIdx) {
+  if (editingStreetIdx < 0) return;
+  const s = STREETS[editingStreetIdx];
+  if (s && s.extraPolygons && s.extraPolygons[epIdx]) {
+    s.extraPolygons.splice(epIdx, 1);
+    renderEditorStreets();
+    showToast('иния удалена');
+  }
+}
+
+export function clearThisLineGeometry(gi) {
+  if (editingStreetIdx < 0) return;
+  const s = STREETS[editingStreetIdx];
+  if (!s) return;
+  if (gi === 0) { s.coords = []; }
+  else if (s.extraPolygons && s.extraPolygons[gi - 1]) { s.extraPolygons[gi - 1] = []; }
+  renderEditorStreets();
+  showToast('еометрия очищена');
+}
 
 export function toggleEditor() {
   const panel = document.getElementById('editor-panel');
