@@ -2,14 +2,10 @@
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
-import { onGeomanCreate } from './editor.js';
+import { onGeomanCreate, onGeomanRemove } from './editor.js';
 import { 
-  setMap, 
-  setRouteLayerGroup,
-  setYardLayerGroup,
-  setOverlapLayerGroup,
-  setPreviewLayerGroup,
-  setStreetLayerGroup
+  setMap, setRouteLayerGroup, setYardLayerGroup, 
+  setOverlapLayerGroup, setPreviewLayerGroup, setStreetLayerGroup
 } from './state.js';
 
 export function initMap() {
@@ -17,15 +13,16 @@ export function initMap() {
   const newMap = L.map('map', {zoomControl:true, maxBounds:bounds, maxBoundsViscosity:0.7, minZoom:12, maxZoom:19}).setView([55.655,37.485], 14);
   setMap(newMap);
   
-  // Включаем Geoman
   if (newMap.pm) {
-  newMap.pm.setLang('ru');
+    newMap.pm.setLang('ru');
+    
+    // Включаем кнопки: Линия, Полигон, Редактировать, Удалить
     newMap.pm.addControls({
       position: 'topleft',
       drawMarker: false,
       drawCircleMarker: false,
-      drawPolyline: true,
-      drawPolygon: true,
+      drawPolyline: true,   // Линия
+      drawPolygon: true,    // Полигон (должен быть включен)
       drawRectangle: false,
       drawCircle: false,
       drawText: false,
@@ -37,14 +34,16 @@ export function initMap() {
       snappingOption: true,
     });
 
-  // Слушаем создание фигуры в Geoman
-  newMap.on('pm:create', (e) => {
-    import('./editor.js').then(m => m.onGeomanCreate(e));
-  });
-  }
+    // Событие создания фигуры
+    newMap.on('pm:create', (e) => {
+      onGeomanCreate(e);
+    });
 
-  // Подключаем обработчик клика для редактора (старый, для совместимости)
-  
+    // Событие удаления фигуры
+    newMap.on('pm:remove', (e) => {
+      onGeomanRemove(e);
+    });
+  }
 
   const baseLayers = {
     'Схема': L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {subdomains:'abc', attribution:'&copy; OpenStreetMap France', maxZoom:20}),
@@ -67,5 +66,3 @@ export function initMap() {
 
   setTimeout(() => newMap.invalidateSize(), 200);
 }
-
-

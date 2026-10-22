@@ -8,6 +8,7 @@ import { esc } from './utils.js';
 
 function showToast(msg) {
   if (typeof window.toast === 'function') window.toast(msg, 'info');
+  else console.log('Toast:', msg);
 }
 
 // ================= СОХРАНЕНИЕ =================
@@ -17,9 +18,9 @@ export function saveCurrentObject() {
     return;
   }
   
-  // Сохраняем массив STREETS в localStorage
   pushUndo('сохранение маршрута');
   try {
+    // Сохраняем массив STREETS
     localStorage.setItem('zhilischnik_v45_streets', JSON.stringify({ streets: STREETS }));
     showToast('Маршрут сохранён в браузере!');
     renderEditorStreets();
@@ -28,7 +29,7 @@ export function saveCurrentObject() {
   }
 }
 
-// Загрузка при старте (вызываем в boot)
+// Загрузка при старте
 export function loadStreetsFromStorage() {
   const raw = localStorage.getItem('zhilischnik_v45_streets');
   if (raw) {
@@ -61,12 +62,16 @@ export function renderStreetLayer() {
       fillColor: color, fillOpacity: isEditing ? 0.3 : 0.1
     };
 
+    // Основная геометрия (если есть)
     if (s.coords && s.coords.length >= 2) {
       const isPoly = s.coords.length >= 3;
-      if (isPoly) L.polygon(s.coords, options).addTo(streetLayerGroup);
-      else L.polyline(s.coords, { ...options, fillOpacity: 0, dashArray: '5, 5' }).addTo(streetLayerGroup);
+      let layer;
+      if (isPoly) layer = L.polygon(s.coords, options).addTo(streetLayerGroup);
+      else layer = L.polyline(s.coords, { ...options, fillOpacity: 0, dashArray: '5, 5' }).addTo(streetLayerGroup);
+      s._layer = layer;
     }
 
+    // Доп. фигуры (extraPolygons)
     if (s.extraPolygons) {
       s.extraPolygons.forEach(ep => {
         if (ep.length >= 2) {
@@ -91,8 +96,11 @@ export function onGeomanCreate(e) {
   if (!s) return;
 
   let coords = [];
-  if (e.shape === 'Polygon') {
-    coords = e.layer.getLatLngs()[0].map(ll => [ll.lat, ll.lng]);
+  if (e.shape === 'Polygon' || e.shape === 'Rectangle') {
+    // Для полигона getLatLngs возвращает массив массивов
+    const latlngs = e.layer.getLatLngs();
+    // Берем внешний контур (первый массив)
+    coords = (Array.isArray(latlngs[0]) ? latlngs[0] : latlngs).map(ll => [ll.lat, ll.lng]);
   } else if (e.shape === 'Line' || e.shape === 'Polyline') {
     coords = e.layer.getLatLngs().map(ll => [ll.lat, ll.lng]);
   }
@@ -103,12 +111,37 @@ export function onGeomanCreate(e) {
   if (!s.extraPolygons) s.extraPolygons = [];
   s.extraPolygons.push(coords);
 
-  // Удаляем слой Geoman, чтобы фигура не висела дважды
+  // Удаляем слой Geoman, чтобы не было дублей
   map.removeLayer(e.layer);
   
   renderStreetLayer();
   renderEditorStreets();
   showToast('Фигура добавлена. Не забудьте сохранить!');
+}
+
+// Удаление фигуры через Geoman
+export function onGeomanRemove(e) {
+  if (editingStreetIdx < 0) return;
+  const s = STREETS[editingStreetIdx];
+  if (!s || !s.extraPolygons) return;
+
+  let coords = [];
+  if (e.shape === 'Polygon' || e.shape === 'Rectangle') {
+    const latlngs = e.layer.getLatLngs();
+    coords = (Array.isArray(latlngs[0]) ? latlngs[0] : latlngs).map(ll => [ll.lat, ll.lng]);
+  } else {
+    coords = e.layer.getLatLngs().map(ll => [ll.lat, ll.lng]);
+  }
+
+  const originalLength = s.extraPolygons.length;
+  s.extraPolygons = s.extraPolygons.filter(ep => JSON.stringify(ep) !== JSON.stringify(coords));
+
+  if (s.extraPolygons.length !== originalLength) {
+    pushUndo('удаление фигуры');
+    renderStreetLayer();
+    renderEditorStreets();
+    showToast('Фигура удалена. Не забудьте сохранить!');
+  }
 }
 
 // ================= СПИСОК =================
@@ -133,6 +166,11 @@ export function renderEditorStreets() {
       setEditingStreetIdx(idx);
       renderEditorStreets();
       renderStreetLayer();
+      
+      // Приближаем карту к объекту (если есть геометрия)
+      if (s._layer && map) {
+        map.fitBounds(s._layer.getBounds(), { padding: [50, 50], maxZoom: 16 });
+      }
       
       document.getElementById('ed-info').textContent = 'Выбран объект: ' + s.name;
       document.getElementById('editor-bottom-bar').style.display = 'block';
@@ -172,7 +210,7 @@ export function cancelEditing() {
   if (bottomBar) bottomBar.style.display = 'none';
 }
 
-// Заглушки для совместимости
+// Заглушки для совместимости (чтобы index.html не ругался)
 export function startDrawMode() {}
 export function toggleDrawingMode() {}
 export function updateToolbarButtons() {}

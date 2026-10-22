@@ -727,12 +727,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
 import { initMap } from './src/map.js';
+import { runDiagnostics } from './src/diagnostics.js';
 import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
 import { saveCurrentObject, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine, startDrawMode } from './src/editor.js';
 import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll, loadData } from './src/ui-controls.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
-Object.assign(window, { saveCurrentObject, setCategory, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine, startDrawMode, onSearchInput, renderList, updateCategoryCounts,
+Object.assign(window, { runDiagnostics, saveCurrentObject, setCategory, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine, startDrawMode, onSearchInput, renderList, updateCategoryCounts,
   toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll, loadData,
   openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom
 });
@@ -763,7 +764,10 @@ function boot() {
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       import('./src/editor.js').then(m => m.cancelEditing());
-    }
+    
+  // ТС СТ
+  setTimeout(() => { if (window.runDiagnostics) window.runDiagnostics(); }, 1000);
+}
   });
 }
 if (document.readyState === 'loading') {
