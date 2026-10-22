@@ -5,7 +5,7 @@ import {
   currentCategory, activeUchastok, selectedForShow, 
   routeFilterActive, explicitlyExpanded, subtypesCollapsedByDefault,
   collapsedSubtypes, activeVehicle, hoveredVehicle, setHoveredVehicle,
-  getBaseColor
+  getBaseColor, setCurrentCategory
 } from './state.js';
 
 // === ВЫЗОВ СТАРЫХ ФУНКЦИЙ ИЗ index.html ===
@@ -183,7 +183,7 @@ function createMachineCard(m) {
 }
 
 export function setCategory(cat) {
-  import('./state.js').then(m => m.setCurrentCategory(cat));
+  setCurrentCategory(cat);
   renderList();
 }
 export function onSearchInput() { renderList(); }

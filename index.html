@@ -567,33 +567,30 @@
     </div>
   </div>
 
-  
   <div id="editor-panel">
     <div class="ep-header">
-      <span>🛠 едактор улиц и дворов</span>
+      <span>🛠 Редактор улиц и дворов</span>
       <span class="close" onclick="toggleEditor()">&times;</span>
     </div>
     <div class="ep-body" style="display:flex; flex-direction:column;">
       <h3>
-        <span>🛣 бъекты</span>
+        <span>🛣 Объекты</span>
       </h3>
       <div class="row">
-        <input type="text" id="ed-street-search" placeholder="оиск..." oninput="renderEditorStreets()" />
+        <input type="text" id="ed-street-search" placeholder="Поиск..." oninput="renderEditorStreets()" />
       </div>
       <div class="ed-street-list" id="ed-street-list" style="flex:1; overflow-y:auto; min-height: 200px;"></div>
 
-      <div class="ep-info" id="ed-info" style="margin-top: 10px;">ыберите объект из списка, чтобы начать рисовать.</div>
+      <div class="ep-info" id="ed-info" style="margin-top: 10px;">Выберите объект из списка, чтобы начать рисовать.</div>
       
       <div style="margin-top: 10px;">
-         <button class="ed-btn red" onclick="clearEditorDraw()" style="width:100%;">🗑 чистить фигуры объекта</button>
+         <button class="ed-btn red" onclick="clearEditorDraw()" style="width:100%;">🗑 Очистить фигуры объекта</button>
       </div>
 
       <div id="editor-bottom-bar" style="display: none; padding: 12px 0; margin-top: 10px;">
         <button class="ed-btn green" onclick="saveCurrentObject()" style="width: 100%; font-size: 14px; padding: 10px;">💾 Сохранить маршрут</button>
       </div>
     </div>
-  </div>
-
   </div>
 
   <div id="history-panel">
@@ -746,30 +743,35 @@ window.skipOnboarding      = () => { localStorage.setItem('zhilischnik_onboarded
 
 const todo = (n) => () => console.warn('[TODO] ' + n);
 Object.assign(window, {
-  manualOpenUchastok: todo('manualOpenUchastok'), openAddToCategory: todo('openAddToCategory'), removeFromCategory: todo('removeFromCategory'),
-  openPicker: todo('openPicker'), printRoute: todo('printRoute'), printMapOnly: todo('printMapOnly'),
-  addNewStreet: todo('addNewStreet'), confirmNewStreet: todo('confirmNewStreet'), onboardingNext: todo('onboardingNext'),
-  scmCreateNew: todo('scmCreateNew'), scmRemoveSubtype: todo('scmRemoveSubtype')
+  manualOpenUchastok: todo('manualOpenUchastok'),
+  openAddToCategory: todo('openAddToCategory'),
+  removeFromCategory: todo('removeFromCategory'),
+  addNewStreet: todo('addNewStreet'),
+  scmCreateNew: todo('scmCreateNew'),
+  scmRemoveSubtype: todo('scmRemoveSubtype')
 });
 
-function boot() { 
-  initMap(); 
-  loadData(); 
-  import('./src/editor.js').then(m => m.loadStreetsFromStorage()); 
-  setCategory('dvory'); 
-  renderList(); 
-  updateCategoryCounts(); 
-  
+function boot() {
+  initMap();
+  loadData();
+  import('./src/editor.js').then(m => m.loadStreetsFromStorage());
+  setCategory('dvory');
+  renderList();
+  updateCategoryCounts();
+
   import('./src/state.js').then(m => m.updateUndoButton());
+
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       import('./src/editor.js').then(m => m.cancelEditing());
-    
-  // ТС СТ
-  setTimeout(() => { if (window.runDiagnostics) window.runDiagnostics(); }, 1000);
-}
+    }
   });
+
+  if (new URLSearchParams(location.search).has('debug')) {
+    setTimeout(() => { if (window.runDiagnostics) window.runDiagnostics(); }, 1000);
+  }
 }
+
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', boot);
 } else {
@@ -778,7 +780,3 @@ if (document.readyState === 'loading') {
 </script>
 </body>
 </html>
-
-
-
-

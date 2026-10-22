@@ -1,4 +1,5 @@
 ﻿import { MACHINES } from './data.js';
+import { escAttr } from './utils.js';
 import { renderList } from './ui.js';
 import { 
   rbRoutesByVehicle, selectedForShow, activeRouteIndex, history, showMode, activeUchastok, 
@@ -21,8 +22,14 @@ export function resetAll() {
 
 export function toggleEditMode() {
   const on = document.body.classList.toggle('edit-mode');
+  import('./state.js').then(m => m.setEditMode(on));
   const b = document.getElementById('edit-mode-btn');
   if (b) b.innerHTML = on ? 'Готово' : '✏️ <span>Редактировать</span>';
+  const badge = document.getElementById('mode-badge');
+  if (badge) {
+    badge.className = on ? 'edit' : 'view';
+    badge.textContent = on ? '✏️ Редактирование' : '👁 Просмотр';
+  }
 }
 
 export function openHistory() {
@@ -32,10 +39,15 @@ export function openHistory() {
 }
 
 function renderHistory() {
-  const panel = document.getElementById('history-panel');
-  if (!panel) return;
-  if (!history || !history.length) { panel.innerHTML = '<div style="padding:12px">История пуста</div>'; return; }
-  panel.innerHTML = history.map(h => `<div style="padding:6px 12px;border-bottom:1px solid #eee">${h.time} — ${h.action}</div>`).join('');
+  const body = document.getElementById('history-body');
+  if (!body) return;
+  if (!history || !history.length) {
+    body.innerHTML = '<div class="hp-empty">История пуста</div>';
+    return;
+  }
+  body.innerHTML = history.map(h =>
+    '<div class="hp-item"><div class="hp-time">' + escAttr(h.time || '') + '</div>' + escAttr(h.action || '') + '</div>'
+  ).join('');
 }
 
 export function exportCSV() {
@@ -60,9 +72,20 @@ export function exportCSV() {
 
 export async function exportHTML() {
   try {
-    const res = await fetch('./template.html');
-    if (!res.ok) throw new Error('Файл template.html не найден');
-    const html = await res.text();
+    let html = window.__SINGLE_FILE_TEMPLATE__;
+    if (!html) {
+      html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    }
+    const data = {
+      rbRoutesByVehicle,
+      selectedForShow: Array.from(selectedForShow),
+      activeRouteIndex,
+      history: history || [],
+      activeUchastok
+    };
+    const inject = '<script>window.__EMBEDDED_DATA__ = ' +
+      JSON.stringify(data).replace(/</g, '\\u003c') + ';</' + 'script>';
+    html = html.replace('</body>', inject + '</body>');
 
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -83,7 +106,7 @@ export function printRoutes() { console.log('[TODO] printRoutes'); }
 
 export function undoLastAction() {
   if (undoStack.length === 0) {
-    toast('ечего отменять', 'info');
+    toast('Нечего отменять', 'info');
     return;
   }
   const entry = undoStack.pop();
@@ -91,7 +114,6 @@ export function undoLastAction() {
     restoreSnapshot(entry.snap);
     renderList();
     
-    // ринудительно перерисовываем слои редактора,  закрывая его
     import('./editor.js').then(m => {
       m.renderStreetLayer(); 
       m.renderEditorStreets();
@@ -102,10 +124,10 @@ export function undoLastAction() {
       renderMiniRoute();
     }
     saveData(false);
-    toast('тменено: ' + (entry.label || 'действие'), 'success');
+    toast('Отменено: ' + (entry.label || 'действие'), 'success');
   } catch (e) {
     console.error('undo error:', e);
-    toast('шибка отмены', 'error');
+    toast('Ошибка отмены', 'error');
   } finally {
     updateUndoButton();
   }
@@ -117,12 +139,12 @@ export function toggleExpandSidebar() {
 }
 
 export function toggleRouteFilter() {
-  const btn = document.getElementById('btn-route-filter');
+  const btn = document.getElementById('on-route-count');
   const isActive = btn?.classList.toggle('active');
   const cards = document.querySelectorAll('.machine-card');
   cards.forEach(card => {
     const plate = card.dataset.plate;
-    const hasRoute = rbRoutesByVehicle[plate]?.length > 0;
+    const hasRoute = rbRoutesByVehicle[plate]?.some(r => r.items && r.items.length > 0);
     card.style.display = (isActive && !hasRoute) ? 'none' : '';
   });
 }
@@ -149,8 +171,8 @@ export function toggleLegend() {
 }
 
 export function setShowMode(mode) {
-  document.querySelectorAll('.show-mode-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById(`show-mode-${mode}`);
+  document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector('.mode-toggle button[data-mode="' + mode + '"]');
   if (btn) btn.classList.add('active');
 }
 
