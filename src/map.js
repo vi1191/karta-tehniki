@@ -1,4 +1,8 @@
-import { onMapClick } from './editor.js';
+﻿import * as L from 'leaflet';
+import '@geoman-io/leaflet-geoman-free';
+import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
+
+import { onGeomanCreate } from './editor.js';
 import { 
   setMap, 
   setRouteLayerGroup,
@@ -12,7 +16,35 @@ export function initMap() {
   const bounds = L.latLngBounds([55.620,37.425],[55.705,37.555]);
   const newMap = L.map('map', {zoomControl:true, maxBounds:bounds, maxBoundsViscosity:0.7, minZoom:12, maxZoom:19}).setView([55.655,37.485], 14);
   setMap(newMap);
-  newMap.on('click', onMapClick);
+  
+  // Включаем Geoman
+  if (newMap.pm) {
+  newMap.pm.setLang('ru');
+    newMap.pm.addControls({
+      position: 'topleft',
+      drawMarker: false,
+      drawCircleMarker: false,
+      drawPolyline: true,
+      drawPolygon: true,
+      drawRectangle: false,
+      drawCircle: false,
+      drawText: false,
+      editMode: true,
+      dragMode: true,
+      cutPolygon: false,
+      removalMode: true,
+      rotateMode: false,
+      snappingOption: true,
+    });
+
+  // Слушаем создание фигуры в Geoman
+  newMap.on('pm:create', (e) => {
+    import('./editor.js').then(m => m.onGeomanCreate(e));
+  });
+  }
+
+  // Подключаем обработчик клика для редактора (старый, для совместимости)
+  
 
   const baseLayers = {
     'Схема': L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {subdomains:'abc', attribution:'&copy; OpenStreetMap France', maxZoom:20}),
@@ -35,3 +67,5 @@ export function initMap() {
 
   setTimeout(() => newMap.invalidateSize(), 200);
 }
+
+

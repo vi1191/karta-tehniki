@@ -1,6 +1,13 @@
-import { MACHINES } from './data.js';
+﻿import { MACHINES } from './data.js';
 import { renderList } from './ui.js';
-import { rbRoutesByVehicle, selectedForShow, activeRouteIndex, history, showMode, activeUchastok, routeFilterActive, setActiveUchastok, setRbRoutesByVehicle, setActiveRouteIndex, setSelectedForShow, setHistory, STORAGE_KEY } from './state.js';
+import { 
+  rbRoutesByVehicle, selectedForShow, activeRouteIndex, history, showMode, activeUchastok, 
+  routeFilterActive, setActiveUchastok, setRbRoutesByVehicle, setActiveRouteIndex, setSelectedForShow, 
+  setHistory, STORAGE_KEY, undoStack, restoreSnapshot, updateUndoButton,
+  activeVehicle, miniRouteVehicle, setActiveVehicle, setMiniRouteVehicle
+} from './state.js';
+import { renderEditorStreets, renderStreetLayer, cancelEditing } from './editor.js';
+import { renderRouteTabs, renderMiniRoute } from './routes.js';
 
 export function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 export function toggleDropdown(id) { document.getElementById(id).classList.toggle('open'); }
@@ -19,7 +26,7 @@ export function toggleEditMode() {
 }
 
 export function openHistory() {
-  closeEditor();
+  document.getElementById('editor-panel')?.classList.remove('open');
   document.getElementById('history-panel').classList.add('open');
   renderHistory();
 }
@@ -54,7 +61,7 @@ export function exportCSV() {
 export async function exportHTML() {
   try {
     const res = await fetch('./template.html');
-    if (!res.ok) throw new Error('айл template.html не найден');
+    if (!res.ok) throw new Error('Файл template.html не найден');
     const html = await res.text();
 
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -67,14 +74,42 @@ export async function exportHTML() {
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
     toast('HTML-файл сохранён', 'success');
   } catch (err) {
-    toast('шибка экспорта: ' + err.message, 'error');
+    toast('Ошибка экспорта: ' + err.message, 'error');
   }
 }
-export function startOnboarding() { console.log('startOnboarding: logic not moved yet'); }
 
-export function printRoutes() { console.log('printRoutes: logic not moved yet'); }
+export function startOnboarding() { console.log('[TODO] startOnboarding'); }
+export function printRoutes() { console.log('[TODO] printRoutes'); }
 
-export function undoLastAction() { console.log('undoLastAction: logic not moved yet'); }
+export function undoLastAction() {
+  if (undoStack.length === 0) {
+    toast('ечего отменять', 'info');
+    return;
+  }
+  const entry = undoStack.pop();
+  try {
+    restoreSnapshot(entry.snap);
+    renderList();
+    
+    // ринудительно перерисовываем слои редактора,  закрывая его
+    import('./editor.js').then(m => {
+      m.renderStreetLayer(); 
+      m.renderEditorStreets();
+    });
+    
+    if (miniRouteVehicle) {
+      renderRouteTabs();
+      renderMiniRoute();
+    }
+    saveData(false);
+    toast('тменено: ' + (entry.label || 'действие'), 'success');
+  } catch (e) {
+    console.error('undo error:', e);
+    toast('шибка отмены', 'error');
+  } finally {
+    updateUndoButton();
+  }
+}
 
 export function toggleExpandSidebar() {
   const sidebar = document.getElementById('sidebar');
@@ -92,9 +127,7 @@ export function toggleRouteFilter() {
   });
 }
 
-export function toggleOverlaps() {
-  console.log('toggleOverlaps: logic not moved yet');
-}
+export function toggleOverlaps() { console.log('[TODO] toggleOverlaps'); }
 
 export function selectUchastok(num) {
   const btn = document.querySelector(`.uch-btn[data-u="${num}"]`);

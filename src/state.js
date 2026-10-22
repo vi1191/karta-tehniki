@@ -1,6 +1,6 @@
 // src/state.js
 import { hslToHex, lighten, inferAreaFromName } from './utils.js';
-import { MACHINES, SUBTYPE_ORDER, YARD_BOUNDARIES } from './data.js';
+import { MACHINES, SUBTYPE_ORDER, YARD_BOUNDARIES, STREETS, setStreets } from './data.js';
 
 // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
 export let currentCategory = 'dvory';
@@ -137,23 +137,40 @@ export function getYardColor(s) {
 export function snapshotState() {
   return {
     rbRoutesByVehicle: JSON.parse(JSON.stringify(rbRoutesByVehicle)),
-    streets: JSON.parse(JSON.stringify(YARD_BOUNDARIES)), // временно
+    streets: JSON.parse(JSON.stringify(STREETS)),
     yardBoundaries: JSON.parse(JSON.stringify(YARD_BOUNDARIES)),
     subtypeOrder: JSON.parse(JSON.stringify(SUBTYPE_ORDER)),
     overrides: MACHINES.map(m => ({plate: m.plate, isODH: m.isODH, isDvory: m.isDvory, area: m.area, subtype: m.subtype}))
   };
 }
 
+export function updateUndoButton() {
+  const btn = document.getElementById('undo-btn');
+  if (!btn) return;
+  if (undoStack.length === 0) {
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+    btn.title = 'Нечего отменять';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    const last = undoStack[undoStack.length - 1];
+    btn.title = 'Отменить: ' + (last.label || 'действие') + ' (' + undoStack.length + ')';
+  }
+}
+
 export function pushUndo(label) {
   if (undoInProgress) return;
   undoStack.push({ label, snap: snapshotState(), time: new Date() });
   if (undoStack.length > MAX_UNDO) undoStack.shift();
+  updateUndoButton();
 }
 
 export function restoreSnapshot(snap) {
   undoInProgress = true;
   try {
     rbRoutesByVehicle = JSON.parse(JSON.stringify(snap.rbRoutesByVehicle));
+    if (snap.streets) setStreets(JSON.parse(JSON.stringify(snap.streets)));
     Object.keys(YARD_BOUNDARIES).forEach(k => delete YARD_BOUNDARIES[k]);
     Object.keys(snap.yardBoundaries).forEach(k => { YARD_BOUNDARIES[k] = snap.yardBoundaries[k]; });
     Object.keys(SUBTYPE_ORDER).forEach(k => delete SUBTYPE_ORDER[k]);
@@ -162,5 +179,7 @@ export function restoreSnapshot(snap) {
       const m = MACHINES.find(x => x.plate === o.plate);
       if (m) { m.isODH = o.isODH; m.isDvory = o.isDvory; m.area = o.area; m.subtype = o.subtype; }
     });
-  } finally { undoInProgress = false; }
+  } finally {
+    undoInProgress = false;
+  }
 }

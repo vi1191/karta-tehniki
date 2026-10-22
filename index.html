@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
@@ -567,60 +567,33 @@
     </div>
   </div>
 
+  
   <div id="editor-panel">
     <div class="ep-header">
-      <span>🛠 Редактор улиц и дворов</span>
+      <span>🛠 едактор улиц и дворов</span>
       <span class="close" onclick="toggleEditor()">&times;</span>
     </div>
-    <div class="ep-body">
+    <div class="ep-body" style="display:flex; flex-direction:column;">
       <h3>
-        <span>🛣 Объекты</span>
-        <button class="ed-btn green mini" onclick="addNewStreet()">➕ Новый</button>
+        <span>🛣 бъекты</span>
       </h3>
       <div class="row">
-        <input type="text" id="ed-street-search" placeholder="Поиск..." oninput="renderEditorStreets()" />
+        <input type="text" id="ed-street-search" placeholder="оиск..." oninput="renderEditorStreets()" />
       </div>
-      <div class="ed-street-list" id="ed-street-list"></div>
+      <div class="ed-street-list" id="ed-street-list" style="flex:1; overflow-y:auto; min-height: 200px;"></div>
 
-      <h3>✏️ Редактор выбранного</h3>
-      <div class="row">
-        <input type="text" id="ed-street-name" placeholder="Название..." />
-      </div>
-      <div class="row">
-        <select id="ed-street-area" title="Участок (для дворов)">
-          <option value="">— без участка —</option>
-          <option value="1уч">Участок 1 (красный)</option>
-          <option value="2уч">Участок 2 (синий)</option>
-          <option value="3уч">Участок 3 (зелёный)</option>
-          <option value="4уч">Участок 4 (оранжевый)</option>
-          <option value="5уч">Участок 5 (фиолетовый)</option>
-          <option value="6уч">Участок 6 (бирюзовый)</option>
-          <option value="парки">Парки</option>
-        </select>
+      <div class="ep-info" id="ed-info" style="margin-top: 10px;">ыберите объект из списка, чтобы начать рисовать.</div>
+      
+      <div style="margin-top: 10px;">
+         <button class="ed-btn red" onclick="clearEditorDraw()" style="width:100%;">🗑 чистить фигуры объекта</button>
       </div>
 
-      <div class="ep-actions">
-        <button class="ed-btn green" onclick="saveEditedStreet()">💾 Сохранить объект</button>
-        <button class="ed-btn red" onclick="clearEditorDraw()">🗑 Очистить всё</button>
-        <button class="ed-btn gray" onclick="cancelEditing()">✖ Отмена</button>
-      </div>
-      <div class="ed-toolbar" id="ed-toolbar" style="display:none;">
-        <button id="tb-points" onclick="toggleDrawingMode()">✏️ Точки</button>
-        <button id="tb-line" onclick="addExtraLine()">➕ Линия</button>
-        <button id="tb-connect" onclick="toggleConnectMode()">🔗 Соединить</button>
-      </div>
-      <div class="ep-info" id="ed-info">Кликните по объекту на карте или в списке, чтобы начать редактирование.</div>
-      <div class="ep-info" id="ed-stats" style="border-left-color:var(--green);"></div>
-      <div class="ep-info" id="ed-hints" style="border-left-color:var(--orange); display:none; font-size:10px;">
-        <b>💡 Подсказки:</b><br>
-        • Перетаскивайте точки мышью<br>
-        • ✏️ Точки — добавление новых точек кликом по карте<br>
-        • Правый клик по точке — меню (удалить, вставить, очистить линию)<br>
-        • ➕ Линия — новая дополнительная линия<br>
-        • 🔗 Соединить — склеить две линии<br>
-        • Esc — выход из любого режима
+      <div id="editor-bottom-bar" style="display: none; padding: 12px 0; margin-top: 10px;">
+        <button class="ed-btn green" onclick="saveCurrentObject()" style="width: 100%; font-size: 14px; padding: 10px;">💾 Сохранить маршрут</button>
       </div>
     </div>
+  </div>
+
   </div>
 
   <div id="history-panel">
@@ -755,13 +728,11 @@
 <script type="module">
 import { initMap } from './src/map.js';
 import { renderList, setCategory, updateCategoryCounts, onSearchInput } from './src/ui.js';
-import { toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine } from './src/editor.js';
+import { saveCurrentObject, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine, startDrawMode } from './src/editor.js';
 import { toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll, loadData } from './src/ui-controls.js';
 import { openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom } from './src/routes.js';
 
-Object.assign(window, {
-  setCategory, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine,
-  onSearchInput, renderList, updateCategoryCounts,
+Object.assign(window, { saveCurrentObject, setCategory, toggleEditor, toggleDrawingMode, updateToolbarButtons, saveEditedStreet, clearEditorDraw, cancelEditing, addExtraLine, startDrawMode, onSearchInput, renderList, updateCategoryCounts,
   toggleSidebar, toggleDropdown, toggleTheme, resetAll, toggleEditMode, openHistory, exportCSV, startOnboarding, exportHTML, printRoutes, undoLastAction, saveData, toggleExpandSidebar, toggleRouteFilter, toggleOverlaps, selectUchastok, toggleLegend, setShowMode, toggleSelectAll, loadData,
   openMiniRoute, closeMiniRoute, renderRouteTabs, renderMiniRoute, switchRoute, moveTab, moveRoutePoint, removeFromMiniRoute, clearActiveRoute, copyRouteFrom
 });
@@ -780,7 +751,21 @@ Object.assign(window, {
   scmCreateNew: todo('scmCreateNew'), scmRemoveSubtype: todo('scmRemoveSubtype')
 });
 
-function boot() { initMap(); loadData(); setCategory('dvory'); renderList(); updateCategoryCounts(); }
+function boot() { 
+  initMap(); 
+  loadData(); 
+  import('./src/editor.js').then(m => m.loadStreetsFromStorage()); 
+  setCategory('dvory'); 
+  renderList(); 
+  updateCategoryCounts(); 
+  
+  import('./src/state.js').then(m => m.updateUndoButton());
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      import('./src/editor.js').then(m => m.cancelEditing());
+    }
+  });
+}
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', boot);
 } else {
