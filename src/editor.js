@@ -1,6 +1,6 @@
 // src/editor.js
 import { STREETS } from './data.js';
-import { drawingMode, editObjectMode, connectMode, editingStreetIdx, setDrawingMode, setEditObjectMode, setConnectMode, setEditingStreetIdx } from './state.js'; 
+import { drawingMode, editObjectMode, connectMode, editingStreetIdx, setDrawingMode, setEditObjectMode, setConnectMode, setEditingStreetIdx, setConnectSource } from './state.js'; 
 import { esc } from './utils.js'; 
 
 
