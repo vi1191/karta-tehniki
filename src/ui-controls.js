@@ -1,6 +1,6 @@
 import { MACHINES } from './data.js';
 import { renderList } from './ui.js';
-import { rbRoutesByVehicle, selectedForShow, activeRouteIndex, history, showMode, activeUchastok, routeFilterActive, setActiveUchastok, setRbRoutesByVehicle, setActiveRouteIndex, setSelectedForShow, STORAGE_KEY } from './state.js';
+import { rbRoutesByVehicle, selectedForShow, activeRouteIndex, history, showMode, activeUchastok, routeFilterActive, setActiveUchastok, setRbRoutesByVehicle, setActiveRouteIndex, setSelectedForShow, setHistory, STORAGE_KEY } from './state.js';
 
 export function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 export function toggleDropdown(id) { document.getElementById(id).classList.toggle('open'); }
@@ -62,7 +62,6 @@ export function exportHTML() {
   };
 
   const clone = document.documentElement.cloneNode(true);
-  // Чистим динамические элементы
   const dynamicSelectors = [
     '.photo-overlay', '#uchastok-panel', '#toast', '.leaflet-popup',
     '.leaflet-control-container', '#line-context-menu', '#point-context-menu',
@@ -195,17 +194,16 @@ export function loadData() {
       if (data.rbRoutesByVehicle) setRbRoutesByVehicle(data.rbRoutesByVehicle);
       if (data.selectedForShow) setSelectedForShow(new Set(data.selectedForShow));
       if (typeof data.activeRouteIndex === 'number') setActiveRouteIndex(data.activeRouteIndex);
-      if (data.history) history = data.history;
+      if (data.history) setHistory(data.history);
       if (data.activeUchastok) setActiveUchastok(data.activeUchastok);
       return;
     }
-    // Если localStorage пуст, проверяем встроенные данные из экспортированного HTML
     if (window.__EMBEDDED_DATA__) {
       const d = window.__EMBEDDED_DATA__;
       if (d.rbRoutesByVehicle) setRbRoutesByVehicle(d.rbRoutesByVehicle);
       if (d.selectedForShow) setSelectedForShow(new Set(d.selectedForShow));
       if (typeof d.activeRouteIndex === 'number') setActiveRouteIndex(d.activeRouteIndex);
-      if (d.history) history = d.history;
+      if (d.history) setHistory(d.history);
       if (d.activeUchastok) setActiveUchastok(d.activeUchastok);
     }
   } catch (e) {
