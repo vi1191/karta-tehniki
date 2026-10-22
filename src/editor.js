@@ -1,35 +1,37 @@
-﻿// src/editor.js
-import { STREETS } from './data.js';
+﻿import { STREETS } from './data.js';
 import { 
   editingStreetIdx, setEditingStreetIdx, pushUndo, 
   streetLayerGroup, map 
 } from './state.js'; 
 import { esc } from './utils.js'; 
 
-function showToast(msg) {
-  if (typeof window.toast === 'function') window.toast(msg, 'info');
+function showToast(msg, type = 'info') {
+  if (typeof window.toast === 'function') window.toast(msg, type);
   else console.log('Toast:', msg);
 }
 
-// ================= СОХРАНЕНИЕ =================
 export function saveCurrentObject() {
   if (editingStreetIdx < 0 || !STREETS[editingStreetIdx]) {
-    showToast('Сначала выберите объект в списке');
+    showToast('Сначала выберите объект в списке', 'error');
     return;
   }
-  
-  pushUndo('сохранение маршрута');
   try {
-    // Сохраняем массив STREETS
-    localStorage.setItem('zhilischnik_v45_streets', JSON.stringify({ streets: STREETS }));
-    showToast('Маршрут сохранён в браузере!');
+    const cleanStreets = STREETS.map(s => {
+      const copy = { ...s };
+      delete copy._layer;
+      return copy;
+    });
+    localStorage.setItem('zhilischnik_v45_streets', JSON.stringify({ streets: cleanStreets }));
+    if (typeof window.saveData === 'function') window.saveData(false);
+    try { pushUndo('сохранение маршрута'); } catch(e) {}
+    showToast('Маршрут сохранён в браузере!', 'success');
     renderEditorStreets();
   } catch (e) {
-    showToast('Ошибка сохранения: ' + e.message);
+    console.error('ОШИБКА СОХРАНЕНИЯ:', e);
+    showToast('Ошибка: ' + e.message, 'error');
   }
 }
 
-// Загрузка при старте
 export function loadStreetsFromStorage() {
   const raw = localStorage.getItem('zhilischnik_v45_streets');
   if (raw) {
@@ -38,8 +40,8 @@ export function loadStreetsFromStorage() {
       if (data.streets && Array.isArray(data.streets)) {
         data.streets.forEach((saved, i) => {
           if (STREETS[i]) {
-            STREETS[i].coords = saved.coords;
-            STREETS[i].extraPolygons = saved.extraPolygons;
+            STREETS[i].coords = saved.coords || [];
+            STREETS[i].extraPolygons = saved.extraPolygons || [];
           }
         });
       }
@@ -48,7 +50,6 @@ export function loadStreetsFromStorage() {
   renderStreetLayer();
 }
 
-// ================= ОТРИСОВКА =================
 export function renderStreetLayer() {
   if (!streetLayerGroup || !map) return;
   streetLayerGroup.clearLayers();
@@ -62,7 +63,6 @@ export function renderStreetLayer() {
       fillColor: color, fillOpacity: isEditing ? 0.3 : 0.1
     };
 
-    // Основная геометрия (если есть)
     if (s.coords && s.coords.length >= 2) {
       const isPoly = s.coords.length >= 3;
       let layer;
@@ -71,9 +71,8 @@ export function renderStreetLayer() {
       s._layer = layer;
     }
 
-    // Доп. фигуры (extraPolygons)
     if (s.extraPolygons) {
-      s.extraPolygons.forEach(ep => {
+      s.extraPolygons.forEach((ep) => {
         if (ep.length >= 2) {
           const isPoly = ep.length >= 3;
           if (isPoly) L.polygon(ep, options).addTo(streetLayerGroup);
@@ -84,10 +83,9 @@ export function renderStreetLayer() {
   });
 }
 
-// ================= ПЕРЕХВАТ ОТ GEOMAN =================
 export function onGeomanCreate(e) {
   if (editingStreetIdx < 0) {
-    showToast('Сначала выберите объект в списке справа!');
+    showToast('Сначала выберите объект в списке справа!', 'error');
     if (map) map.removeLayer(e.layer);
     return;
   }
@@ -97,9 +95,7 @@ export function onGeomanCreate(e) {
 
   let coords = [];
   if (e.shape === 'Polygon' || e.shape === 'Rectangle') {
-    // Для полигона getLatLngs возвращает массив массивов
     const latlngs = e.layer.getLatLngs();
-    // Берем внешний контур (первый массив)
     coords = (Array.isArray(latlngs[0]) ? latlngs[0] : latlngs).map(ll => [ll.lat, ll.lng]);
   } else if (e.shape === 'Line' || e.shape === 'Polyline') {
     coords = e.layer.getLatLngs().map(ll => [ll.lat, ll.lng]);
@@ -111,15 +107,13 @@ export function onGeomanCreate(e) {
   if (!s.extraPolygons) s.extraPolygons = [];
   s.extraPolygons.push(coords);
 
-  // Удаляем слой Geoman, чтобы не было дублей
   map.removeLayer(e.layer);
   
   renderStreetLayer();
   renderEditorStreets();
-  showToast('Фигура добавлена. Не забудьте сохранить!');
+  showToast('Фигура добавлена. Не забудьте сохранить!', 'success');
 }
 
-// Удаление фигуры через Geoman
 export function onGeomanRemove(e) {
   if (editingStreetIdx < 0) return;
   const s = STREETS[editingStreetIdx];
@@ -140,11 +134,10 @@ export function onGeomanRemove(e) {
     pushUndo('удаление фигуры');
     renderStreetLayer();
     renderEditorStreets();
-    showToast('Фигура удалена. Не забудьте сохранить!');
+    showToast('Фигура удалена. Не забудьте сохранить!', 'info');
   }
 }
 
-// ================= СПИСОК =================
 export function renderEditorStreets() {
   const search = (document.getElementById('ed-street-search')?.value || '').toLowerCase();
   const container = document.getElementById('ed-street-list');
@@ -167,19 +160,19 @@ export function renderEditorStreets() {
       renderEditorStreets();
       renderStreetLayer();
       
-      // Приближаем карту к объекту (если есть геометрия)
       if (s._layer && map) {
         map.fitBounds(s._layer.getBounds(), { padding: [50, 50], maxZoom: 16 });
       }
       
-      document.getElementById('ed-info').textContent = 'Выбран объект: ' + s.name;
-      document.getElementById('editor-bottom-bar').style.display = 'block';
+      const info = document.getElementById('ed-info');
+      if (info) info.textContent = 'Выбран объект: ' + s.name;
+      const bottomBar = document.getElementById('editor-bottom-bar');
+      if (bottomBar) bottomBar.style.display = 'block';
     });
     container.appendChild(item);
   });
 }
 
-// ================= УПРАВЛЕНИЕ =================
 export function toggleEditor() {
   const panel = document.getElementById('editor-panel');
   if (panel) {
@@ -199,7 +192,7 @@ export function clearEditorDraw() {
   STREETS[editingStreetIdx].extraPolygons = [];
   renderStreetLayer();
   renderEditorStreets();
-  showToast('Все фигуры удалены');
+  showToast('Все фигуры удалены', 'info');
 }
 
 export function cancelEditing() {
@@ -210,9 +203,30 @@ export function cancelEditing() {
   if (bottomBar) bottomBar.style.display = 'none';
 }
 
-// Заглушки для совместимости (чтобы index.html не ругался)
-export function startDrawMode() {}
-export function toggleDrawingMode() {}
+export function startDrawMode(mode) {
+  if (!map || !map.pm) {
+    showToast('Geoman не инициализирован', 'error');
+    return;
+  }
+  if (editingStreetIdx < 0) {
+    showToast('Сначала выберите объект из списка', 'error');
+    return;
+  }
+
+  map.pm.disableDraw();
+
+  if (mode === 'line') {
+    map.pm.enableDraw('Line', { snappable: true, snapDistance: 20 });
+    showToast('Рисование линии: кликайте по карте, завершите двойным кликом', 'info');
+  } else if (mode === 'polygon') {
+    map.pm.enableDraw('Polygon', { snappable: true, snapDistance: 20 });
+    showToast('Рисование полигона: кликайте по карте, завершите кликом на первой точке', 'info');
+  } else if (mode === 'stop') {
+    showToast('Рисование отменено', 'info');
+  }
+}
+
+export function toggleDrawingMode() { startDrawMode('line'); }
 export function updateToolbarButtons() {}
 export function saveEditedStreet() { saveCurrentObject(); }
 export function addExtraLine() {}
@@ -220,4 +234,5 @@ export function toggleConnectMode() {}
 export function handleConnectClick() {}
 export function insertPointRelative() {}
 export function deleteExtraLine() {}
-export function clearThisLineGeometry() {}
+export function clearThisLineGeometry() { clearEditorDraw(); }
+
