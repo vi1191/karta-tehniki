@@ -1,55 +1,78 @@
-import { activeUchastok, setActiveUchastok, selectedForShow, setSelectedForShow, currentCategory, routeFilterActive, setRouteFilterActive, STORAGE_KEY, rbRoutesByVehicle, setRbRoutesByVehicle, activeRouteIndex, setActiveRouteIndex, history, setHistory } from './state.js';
 import { MACHINES } from './data.js';
 import { renderList } from './ui.js';
+import { rbRoutesByVehicle, selectedForShow, activeRouteIndex, history, showMode, activeUchastok, routeFilterActive, setActiveUchastok, setRbRoutesByVehicle, setActiveRouteIndex, setSelectedForShow, STORAGE_KEY } from './state.js';
 
 export function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 export function toggleDropdown(id) { document.getElementById(id).classList.toggle('open'); }
 export function toggleTheme() { document.body.classList.toggle('dark'); }
 
 export function resetAll() {
-  if (confirm('Сбросить всё?')) {
-    localStorage.clear();
-    location.reload();
-  }
+  if (!confirm('Сбросить все изменения?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
 }
 
 export function toggleEditMode() {
-  const btn = document.getElementById('edit-mode-btn');
-  if (!btn) return;
-  const isEdit = document.body.classList.toggle('edit-mode');
-  btn.innerHTML = isEdit ? '💾 <span>Готово</span>' : '✏️ <span>Редактировать</span>';
+  const on = document.body.classList.toggle('edit-mode');
+  const b = document.getElementById('edit-mode-btn');
+  if (b) b.innerHTML = on ? 'Готово' : '✏️ <span>Редактировать</span>';
 }
 
 export function openHistory() {
-  const panel = document.getElementById('history-panel');
-  const body = document.getElementById('history-body');
-  if (!panel || !body) return;
-  if (!history || history.length === 0) {
-    body.innerHTML = '<div class="hp-empty">История пуста</div>';
-  } else {
-    body.innerHTML = history.slice().reverse().map(h => {
-      const time = h.time ? new Date(h.time).toLocaleString('ru-RU') : '';
-      const label = h.label || 'изменение';
-      return '<div class="hp-item"><div class="hp-time">' + time + '</div>' + label + '</div>';
-    }).join('');
-  }
-  panel.classList.add('open');
+  closeEditor();
+  document.getElementById('history-panel').classList.add('open');
+  renderHistory();
 }
 
-export function exportCSV() { console.log('exportCSV: logic not moved yet'); }
+function renderHistory() {
+  const panel = document.getElementById('history-panel');
+  if (!panel) return;
+  if (!history || !history.length) { panel.innerHTML = '<div style="padding:12px">История пуста</div>'; return; }
+  panel.innerHTML = history.map(h => `<div style="padding:6px 12px;border-bottom:1px solid #eee">${h.time} — ${h.action}</div>`).join('');
+}
+
+export function exportCSV() {
+  const headers = ['Госномер','Модель','Год','Вид','Категория','Участок','Подтип','Маршрут'];
+  const rows = [headers];
+  MACHINES.forEach(m => {
+    const routes = rbRoutesByVehicle[m.plate] || [];
+    const routeStr = routes.map((r, i) => (r && r.items && r.items.length) ? ('М' + (i + 1) + ':' + r.items.length) : '').filter(Boolean).join(' | ');
+    rows.push([m.plate, m.model || '', m.year || '', m.vid || '', m.cat_b || '', m.area || '', m.subtype || '', routeStr]);
+  });
+  const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'karta-tehniki-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  toast('CSV экспортирован', 'success');
+}
+
 export function startOnboarding() { console.log('startOnboarding: logic not moved yet'); }
+
 export function exportHTML() { console.log('exportHTML: logic not moved yet'); }
+
 export function printRoutes() { console.log('printRoutes: logic not moved yet'); }
+
 export function undoLastAction() { console.log('undoLastAction: logic not moved yet'); }
 
 export function toggleExpandSidebar() {
-  const sb = document.getElementById('sidebar');
-  if (sb) sb.classList.toggle('expanded');
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.toggle('expanded');
 }
 
 export function toggleRouteFilter() {
-  setRouteFilterActive(!routeFilterActive);
-  renderList();
+  const btn = document.getElementById('btn-route-filter');
+  const isActive = btn?.classList.toggle('active');
+  const cards = document.querySelectorAll('.machine-card');
+  cards.forEach(card => {
+    const plate = card.dataset.plate;
+    const hasRoute = rbRoutesByVehicle[plate]?.length > 0;
+    card.style.display = (isActive && !hasRoute) ? 'none' : '';
+  });
 }
 
 export function toggleOverlaps() {
@@ -57,65 +80,53 @@ export function toggleOverlaps() {
 }
 
 export function selectUchastok(num) {
-  const next = (activeUchastok === num) ? null : num;
-  setActiveUchastok(next);
-  document.querySelectorAll('.uch-btn').forEach(btn => {
-    btn.classList.toggle('active', String(btn.dataset.u) === String(next));
-  });
+  const btn = document.querySelector(`.uch-btn[data-u="${num}"]`);
+  if (!btn) return;
+  if (activeUchastok === num) {
+    setActiveUchastok(null);
+    btn.classList.remove('active');
+  } else {
+    document.querySelectorAll('.uch-btn').forEach(b => b.classList.remove('active'));
+    setActiveUchastok(num);
+    btn.classList.add('active');
+  }
   renderList();
 }
 
 export function toggleLegend() {
-  document.getElementById('legend').classList.toggle('open');
+  const legend = document.getElementById('legend');
+  if (legend) legend.classList.toggle('open');
 }
 
 export function setShowMode(mode) {
-  console.log('setShowMode:', mode);
+  document.querySelectorAll('.show-mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`show-mode-${mode}`);
+  if (btn) btn.classList.add('active');
+  // Заглушка, логика переключения режимов будет позже
 }
 
 export function toggleSelectAll() {
-  const cat = MACHINES.filter(m =>
-    currentCategory === 'odh' ? m.isODH :
-    currentCategory === 'dvory' ? m.isDvory :
-    true
-  );
-  const allSelected = cat.length > 0 && cat.every(m => selectedForShow.has(m.plate));
-  if (allSelected) setSelectedForShow(new Set());
-  else setSelectedForShow(new Set(cat.map(m => m.plate)));
+  const cards = document.querySelectorAll('.machine-card');
+  const anyUnselected = Array.from(cards).some(c => !c.classList.contains('selected'));
+  cards.forEach(card => card.classList.toggle('selected', anyUnselected));
+  if (anyUnselected) {
+    document.querySelectorAll('.machine-card').forEach(card => selectedForShow.add(card.dataset.plate));
+  } else {
+    selectedForShow.clear();
+  }
   renderList();
 }
 
-function setSaveStatus(state) {
-  const el = document.getElementById('save-status');
-  if (!el) return;
-  if (state === 'saved') { el.textContent = '💾 Сохранено'; el.classList.remove('saving'); }
-  else { el.textContent = '⏳ Сохранение...'; el.classList.add('saving'); }
-}
-
-function toast(msg, type) {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.className = 'toast ' + (type || 'info');
-  t.textContent = msg;
-  t.style.display = 'block';
-  clearTimeout(t._t);
-  t._t = setTimeout(() => { t.style.display = 'none'; }, 2500);
-}
-
-export function saveData(showIndicator) {
-  const overrides = {};
-  MACHINES.forEach(m => { overrides[m.plate] = { isODH: m.isODH, isDvory: m.isDvory, area: m.area, subtype: m.subtype }; });
-  const data = {
-    version: 45,
-    rbRoutesByVehicle,
-    selectedForShow: Array.from(selectedForShow),
-    activeRouteIndex,
-    categoryOverrides: overrides,
-    ts: Date.now()
-  };
+export function saveData(showIndicator = false) {
   try {
+    const data = {
+      rbRoutesByVehicle: rbRoutesByVehicle,
+      selectedForShow: Array.from(selectedForShow),
+      activeRouteIndex: activeRouteIndex,
+      history: history || [],
+      activeUchastok: activeUchastok
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    setSaveStatus('saved');
     if (showIndicator) toast('Сохранено', 'success');
   } catch (e) {
     toast('Ошибка сохранения: ' + e.message, 'error');
@@ -123,34 +134,24 @@ export function saveData(showIndicator) {
 }
 
 export function loadData() {
-  let raw = null;
-  try { raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('zhilischnik_v44') || localStorage.getItem('zhilischnik_v43'); } catch (e) { return; }
-  if (!raw) return;
-  let data;
-  try { data = JSON.parse(raw); } catch (e) { console.warn('loadData: битый JSON', e); return; }
-
-  if (data.rbRoutesByVehicle && typeof data.rbRoutesByVehicle === 'object') {
-    const fresh = {};
-    Object.keys(data.rbRoutesByVehicle).forEach(plate => {
-      const old = data.rbRoutesByVehicle[plate];
-      if (!Array.isArray(old)) return;
-      const routes = [];
-      for (let i = 0; i < 5; i++) {
-        const r = old[i];
-        routes.push(r ? { items: r.items || [], color: r.color || null, name: r.name || ('М' + (i + 1)), ts: r.ts || null } : { items: [], color: null, name: 'М' + (i + 1), ts: null });
-      }
-      fresh[plate] = routes;
-    });
-    setRbRoutesByVehicle(fresh);
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.rbRoutesByVehicle) setRbRoutesByVehicle(data.rbRoutesByVehicle);
+    if (data.selectedForShow) setSelectedForShow(new Set(data.selectedForShow));
+    if (typeof data.activeRouteIndex === 'number') setActiveRouteIndex(data.activeRouteIndex);
+    if (data.history) history = data.history;
+    if (data.activeUchastok) setActiveUchastok(data.activeUchastok);
+  } catch (e) {
+    console.warn('loadData error:', e);
   }
+}
 
-  if (Array.isArray(data.selectedForShow)) setSelectedForShow(new Set(data.selectedForShow));
-  if (typeof data.activeRouteIndex === 'number') setActiveRouteIndex(data.activeRouteIndex);
-
-  if (data.categoryOverrides && typeof data.categoryOverrides === 'object') {
-    MACHINES.forEach(m => {
-      const o = data.categoryOverrides[m.plate];
-      if (o) { m.isODH = !!o.isODH; m.isDvory = !!o.isDvory; m.area = o.area || ''; m.subtype = o.subtype || ''; }
-    });
-  }
+function toast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type || '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
 }
