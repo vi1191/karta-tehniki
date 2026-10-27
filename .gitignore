@@ -1,4 +1,4 @@
-node_modules/
+﻿node_modules/
 dist/
 .vite/
 coverage/
@@ -11,6 +11,5 @@ index.html.bak
 test-results/
 playwright-report/
 Playwright-Report/
-езультаты тестов/
-Тесты/
+.omc/
 .aider*
