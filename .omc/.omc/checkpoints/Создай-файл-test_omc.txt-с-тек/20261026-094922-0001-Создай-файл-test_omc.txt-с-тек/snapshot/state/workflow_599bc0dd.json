@@ -1,0 +1,13 @@
+{
+  "workflow_id": "599bc0dd",
+  "status": "failed",
+  "steps_completed": [],
+  "steps_failed": [
+    "explore"
+  ],
+  "total_tokens": 0,
+  "total_cost": 0.0,
+  "execution_time": 9.15559196472168,
+  "error": "Exception: Agent explore 执行失败: NoModelAvailableError",
+  "timestamp": "2026-10-26T09:25:58.222548"
+}

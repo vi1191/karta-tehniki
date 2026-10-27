@@ -1,0 +1,13 @@
+{
+  "user_id": "default",
+  "default_model": "deepseek",
+  "default_workflow": "build",
+  "notification_enabled": true,
+  "theme": "auto",
+  "editor": "code",
+  "shell": "bash",
+  "api_keys": {},
+  "recent_projects": [],
+  "created_at": 1792995958.245179,
+  "updated_at": 1792995958.2451797
+}

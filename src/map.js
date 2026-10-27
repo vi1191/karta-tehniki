@@ -2,7 +2,8 @@
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
-import { onGeomanCreate, onGeomanRemove } from './editor.js';
+import { onGeomanCreate, onGeomanRemove, onGeomanEdit } from './editor.js';
+import { onRouteDragEnd } from './routes.js';
 import { 
   setMap, setRouteLayerGroup, setYardLayerGroup, 
   setOverlapLayerGroup, setPreviewLayerGroup, setStreetLayerGroup
@@ -33,6 +34,21 @@ export function initMap() {
       rotateMode: false,
       snappingOption: true,
     });
+    const undoControl = L.control({ position: 'topleft' });
+    undoControl.onAdd = () => {
+      const wrapper = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+      const button = L.DomUtil.create('button', '', wrapper);
+      button.id = 'undo-btn';
+      button.type = 'button';
+      button.textContent = '↶';
+      button.title = 'Нечего отменять';
+      button.disabled = true;
+      button.style.cssText = 'width:30px;height:30px;background:white;border:0;cursor:pointer;font-size:21px;opacity:.4';
+      L.DomEvent.disableClickPropagation(wrapper);
+      L.DomEvent.on(button, 'click', () => window.undoLastAction());
+      return wrapper;
+    };
+    undoControl.addTo(newMap);
 
     // Событие создания фигуры
     newMap.on('pm:create', (e) => {
@@ -43,6 +59,8 @@ export function initMap() {
     newMap.on('pm:remove', (e) => {
       onGeomanRemove(e);
     });
+    newMap.on('pm:edit', onGeomanEdit);
+    newMap.on('pm:dragend', onRouteDragEnd);
   }
 
   const baseLayers = {

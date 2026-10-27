@@ -1,5 +1,5 @@
 // src/state.js
-import { hslToHex, lighten, inferAreaFromName } from './utils.js';
+import { hslToHex, inferAreaFromName } from './utils.js';
 import { MACHINES, SUBTYPE_ORDER, YARD_BOUNDARIES, STREETS, setStreets } from './data.js';
 
 // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
@@ -114,9 +114,10 @@ export function getBaseColor(plate) {
 }
 
 export function getRouteColor(plate, routeIdx) {
-  const base = getBaseColor(plate);
-  if (routeIdx === undefined || routeIdx === null) return base;
-  return lighten(base, ROUTE_SHADES[routeIdx] ?? 0);
+  if (routeIdx === undefined || routeIdx === null) return getBaseColor(plate);
+  let hash = 0;
+  for (const ch of plate) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return hslToHex((hash * 137.508 + routeIdx * 71) % 360, 76, 41);
 }
 
 export function getUchastokColor(area) {
@@ -137,7 +138,7 @@ export function getYardColor(s) {
 export function snapshotState() {
   return {
     rbRoutesByVehicle: JSON.parse(JSON.stringify(rbRoutesByVehicle)),
-    streets: JSON.parse(JSON.stringify(STREETS)),
+    streets: JSON.parse(JSON.stringify(STREETS.map(({ _layer, ...street }) => street))),
     yardBoundaries: JSON.parse(JSON.stringify(YARD_BOUNDARIES)),
     subtypeOrder: JSON.parse(JSON.stringify(SUBTYPE_ORDER)),
     overrides: MACHINES.map(m => ({plate: m.plate, isODH: m.isODH, isDvory: m.isDvory, area: m.area, subtype: m.subtype}))

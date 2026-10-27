@@ -1,22 +1,25 @@
-﻿import { MACHINES } from './data.js';
+import { MACHINES, SUBTYPE_ORDER, STREETS } from './data.js';
 import { escAttr } from './utils.js';
-import { renderList } from './ui.js';
+import { renderList, getVisibleMachines } from './ui.js';
+import { confirmAction } from './dialogs.js';
 import { 
-  rbRoutesByVehicle, selectedForShow, activeRouteIndex, history, showMode, activeUchastok, 
-  routeFilterActive, setActiveUchastok, setRbRoutesByVehicle, setActiveRouteIndex, setSelectedForShow, 
+  rbRoutesByVehicle, selectedForShow, activeRouteIndex, history, activeUchastok,
+  routeFilterActive, setRouteFilterActive, setActiveUchastok, setRbRoutesByVehicle, setActiveRouteIndex, setSelectedForShow,
   setHistory, STORAGE_KEY, undoStack, restoreSnapshot, updateUndoButton,
   activeVehicle, miniRouteVehicle, setActiveVehicle, setMiniRouteVehicle
 } from './state.js';
-import { renderEditorStreets, renderStreetLayer, cancelEditing } from './editor.js';
-import { renderRouteTabs, renderMiniRoute } from './routes.js';
+import { renderEditorStreets, renderStreetLayer, cancelEditing, persistStreets } from './editor.js';
+import { renderRouteTabs, renderMiniRoute, renderPicker, renderRouteOnMap } from './routes.js';
+import { applyMachineOverrides, getMachineOverrides } from './machine-actions.js';
 
 export function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 export function toggleDropdown(id) { document.getElementById(id).classList.toggle('open'); }
 export function toggleTheme() { document.body.classList.toggle('dark'); }
 
-export function resetAll() {
-  if (!confirm('Сбросить все изменения?')) return;
+export async function resetAll() {
+  if (!await confirmAction('Сбросить все изменения?')) return;
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('zhilischnik_v45_streets');
   location.reload();
 }
 
@@ -78,10 +81,13 @@ export async function exportHTML() {
     }
     const data = {
       rbRoutesByVehicle,
+      streets: STREETS.map(({ _layer, ...s }) => s),
       selectedForShow: Array.from(selectedForShow),
       activeRouteIndex,
       history: history || [],
-      activeUchastok
+      activeUchastok,
+      machineOverrides: getMachineOverrides(),
+      subtypeOrder: SUBTYPE_ORDER
     };
     const inject = '<script>window.__EMBEDDED_DATA__ = ' +
       JSON.stringify(data).replace(/</g, '\\u003c') + ';</' + 'script>';
@@ -101,8 +107,63 @@ export async function exportHTML() {
   }
 }
 
-export function startOnboarding() { console.log('[TODO] startOnboarding'); }
-export function printRoutes() { console.log('[TODO] printRoutes'); }
+let onboardingStep = 0;
+function renderOnboarding() {
+  const steps = document.querySelectorAll('#onboarding .ob-step');
+  steps.forEach((el, i) => el.classList.toggle('active', i === onboardingStep));
+  document.querySelectorAll('#ob-dots span').forEach((el, i) => el.classList.toggle('active', i === onboardingStep));
+  document.getElementById('ob-prev').style.display = onboardingStep ? '' : 'none';
+  document.getElementById('ob-next').textContent = onboardingStep === steps.length - 1 ? 'Готово' : 'Далее →';
+}
+export function startOnboarding() {
+  onboardingStep = 0;
+  renderOnboarding();
+  document.getElementById('onboarding-overlay').classList.add('open');
+}
+export function onboardingPrev() { onboardingStep = Math.max(0, onboardingStep - 1); renderOnboarding(); }
+export function onboardingNext() {
+  if (onboardingStep >= document.querySelectorAll('#onboarding .ob-step').length - 1) {
+    document.getElementById('onboarding-overlay').classList.remove('open');
+  } else { onboardingStep++; renderOnboarding(); }
+}
+export function printRoutes() {
+  const area = document.getElementById('print-area');
+  if (!area) return;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  let html = '<h1>Сводка маршрутов</h1>';
+  html += '<p style="font-size:12px;color:#566573;margin-bottom:10px;">Дата: ' + escAttr(dateStr) + ' · Всего транспорта: ' + MACHINES.length + '</p>';
+  html += '<table><thead><tr><th>Госномер</th><th>Модель</th><th>Маршруты</th></tr></thead><tbody>';
+
+  MACHINES.forEach(m => {
+    const routes = rbRoutesByVehicle[m.plate] || [];
+    const hasRoutes = routes.some(r => r && r.items && r.items.length > 0);
+    if (!hasRoutes) return;
+
+    const routeParts = routes
+      .map((r, i) => {
+        if (!r || !r.items || !r.items.length) return '';
+        const name = r.name || ('М' + (i + 1));
+        const count = r.items.length;
+        const names = r.items.map(s => escAttr(s.name || '')).join(', ');
+        return name + ' (' + count + ' пунктов): ' + names;
+      })
+      .filter(Boolean)
+      .join(' | ');
+
+    html += '<tr>' +
+      '<td>' + escAttr(m.plate || '') + '</td>' +
+      '<td>' + escAttr(m.model || '') + '</td>' +
+      '<td>' + routeParts + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+  area.innerHTML = html;
+  window.print();
+}
 
 export function undoLastAction() {
   if (undoStack.length === 0) {
@@ -122,7 +183,10 @@ export function undoLastAction() {
     if (miniRouteVehicle) {
       renderRouteTabs();
       renderMiniRoute();
+      renderPicker();
     }
+    renderRouteOnMap();
+    persistStreets();
     saveData(false);
     toast('Отменено: ' + (entry.label || 'действие'), 'success');
   } catch (e) {
@@ -140,28 +204,32 @@ export function toggleExpandSidebar() {
 
 export function toggleRouteFilter() {
   const btn = document.getElementById('on-route-count');
-  const isActive = btn?.classList.toggle('active');
-  const cards = document.querySelectorAll('.machine-card');
-  cards.forEach(card => {
-    const plate = card.dataset.plate;
-    const hasRoute = rbRoutesByVehicle[plate]?.some(r => r.items && r.items.length > 0);
-    card.style.display = (isActive && !hasRoute) ? 'none' : '';
-  });
+  setRouteFilterActive(!routeFilterActive);
+  btn?.classList.toggle('active', routeFilterActive);
+  btn?.setAttribute('aria-pressed', String(routeFilterActive));
+  renderList();
 }
 
-export function toggleOverlaps() { console.log('[TODO] toggleOverlaps'); }
+export function clearMachineFilters() {
+  setRouteFilterActive(false);
+  setActiveUchastok(null);
+  document.getElementById('on-route-count')?.classList.remove('active');
+  document.getElementById('on-route-count')?.setAttribute('aria-pressed', 'false');
+  document.querySelectorAll('.uch-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+  renderList();
+}
+
+// Переключатель наложений скрыт до реализации отрисовки маршрутов на карте.
 
 export function selectUchastok(num) {
   const btn = document.querySelector(`.uch-btn[data-u="${num}"]`);
   if (!btn) return;
   if (activeUchastok === num) {
     setActiveUchastok(null);
-    btn.classList.remove('active');
   } else {
-    document.querySelectorAll('.uch-btn').forEach(b => b.classList.remove('active'));
     setActiveUchastok(num);
-    btn.classList.add('active');
   }
+  document.querySelectorAll('.uch-btn').forEach(b => { b.classList.toggle('active', Number(b.dataset.u) === activeUchastok); b.setAttribute('aria-pressed', String(Number(b.dataset.u) === activeUchastok)); });
   renderList();
 }
 
@@ -170,22 +238,19 @@ export function toggleLegend() {
   if (legend) legend.classList.toggle('open');
 }
 
-export function setShowMode(mode) {
-  document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.remove('active'));
-  const btn = document.querySelector('.mode-toggle button[data-mode="' + mode + '"]');
-  if (btn) btn.classList.add('active');
+export function toggleSelectAll() {
+  const visible = getVisibleMachines();
+  const select = visible.some(m => !selectedForShow.has(m.plate));
+  visible.forEach(m => { if (select) selectedForShow.add(m.plate); else selectedForShow.delete(m.plate); });
+  renderList();
+  saveData(false);
 }
 
-export function toggleSelectAll() {
-  const cards = document.querySelectorAll('.machine-card');
-  const anyUnselected = Array.from(cards).some(c => !c.classList.contains('selected'));
-  cards.forEach(card => card.classList.toggle('selected', anyUnselected));
-  if (anyUnselected) {
-    document.querySelectorAll('.machine-card').forEach(card => selectedForShow.add(card.dataset.plate));
-  } else {
-    selectedForShow.clear();
-  }
+export function toggleForShow(plate) {
+  if (selectedForShow.has(plate)) selectedForShow.delete(plate);
+  else selectedForShow.add(plate);
   renderList();
+  saveData(false);
 }
 
 export function saveData(showIndicator = false) {
@@ -195,12 +260,16 @@ export function saveData(showIndicator = false) {
       selectedForShow: Array.from(selectedForShow),
       activeRouteIndex: activeRouteIndex,
       history: history || [],
-      activeUchastok: activeUchastok
+      activeUchastok: activeUchastok,
+      machineOverrides: getMachineOverrides(),
+      subtypeOrder: SUBTYPE_ORDER
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     if (showIndicator) toast('Сохранено', 'success');
+    return true;
   } catch (e) {
     toast('Ошибка сохранения: ' + e.message, 'error');
+    return false;
   }
 }
 
@@ -213,16 +282,21 @@ export function loadData() {
       if (data.selectedForShow) setSelectedForShow(new Set(data.selectedForShow));
       if (typeof data.activeRouteIndex === 'number') setActiveRouteIndex(data.activeRouteIndex);
       if (data.history) setHistory(data.history);
-      if (data.activeUchastok) setActiveUchastok(data.activeUchastok);
+       if (data.activeUchastok) setActiveUchastok(data.activeUchastok);
+      applyMachineOverrides(data);
       return;
     }
     if (window.__EMBEDDED_DATA__) {
       const d = window.__EMBEDDED_DATA__;
+      if (Array.isArray(d.streets) && !localStorage.getItem('zhilischnik_v45_streets')) {
+        localStorage.setItem('zhilischnik_v45_streets', JSON.stringify({ streets: d.streets }));
+      }
       if (d.rbRoutesByVehicle) setRbRoutesByVehicle(d.rbRoutesByVehicle);
       if (d.selectedForShow) setSelectedForShow(new Set(d.selectedForShow));
       if (typeof d.activeRouteIndex === 'number') setActiveRouteIndex(d.activeRouteIndex);
       if (d.history) setHistory(d.history);
-      if (d.activeUchastok) setActiveUchastok(d.activeUchastok);
+       if (d.activeUchastok) setActiveUchastok(d.activeUchastok);
+      applyMachineOverrides(d);
     }
   } catch (e) {
     console.warn("loadData error:", e);
